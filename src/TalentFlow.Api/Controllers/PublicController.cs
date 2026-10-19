@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TalentFlow.Application.Common.Models;
 using TalentFlow.Application.Features.Public;
 
@@ -30,6 +31,7 @@ public class PublicController : ApiControllerBase
 
     [HttpPost("jobs/{id:guid}/apply")]
     [Consumes("multipart/form-data")]
+    [EnableRateLimiting("apply-rate-limit")]
     public async Task<ActionResult<object>> Apply(
         Guid id,
         [FromForm] string fullName,

@@ -49,12 +49,21 @@ public static class DependencyInjection
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequiredLength = 6;
             options.User.RequireUniqueEmail = true;
+
+            // Lockout configuration (SEC-07 & PRD Section 9)
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.AllowedForNewUsers = true;
         })
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
 
         // 3. JWT Authentication
-        var secret = configuration["JwtSettings:Secret"] ?? "TalentFlowDefaultSuperSecretKey123456789!#%&";
+        var secret = configuration["JwtSettings:Secret"];
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            throw new InvalidOperationException("Fatal: 'JwtSettings:Secret' configuration is missing. A secure JWT secret must be provided.");
+        }
         var issuer = configuration["JwtSettings:Issuer"] ?? "TalentFlowApi";
         var audience = configuration["JwtSettings:Audience"] ?? "TalentFlowClient";
 

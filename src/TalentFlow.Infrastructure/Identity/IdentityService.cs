@@ -58,11 +58,23 @@ public class IdentityService : IIdentityService
             return (false, string.Empty, string.Empty, string.Empty, "Invalid email or user account is inactive.");
         }
 
+        if (await _userManager.IsLockedOutAsync(user))
+        {
+            return (false, string.Empty, string.Empty, string.Empty, "Account is locked out due to multiple failed login attempts. Please try again later.");
+        }
+
         var passwordValid = await _userManager.CheckPasswordAsync(user, password);
         if (!passwordValid)
         {
+            await _userManager.AccessFailedAsync(user);
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                return (false, string.Empty, string.Empty, string.Empty, "Account is locked out due to multiple failed login attempts. Please try again later.");
+            }
             return (false, string.Empty, string.Empty, string.Empty, "Invalid credentials.");
         }
+
+        await _userManager.ResetAccessFailedCountAsync(user);
 
         var roles = await _userManager.GetRolesAsync(user);
         var role = roles.FirstOrDefault() ?? user.Role;

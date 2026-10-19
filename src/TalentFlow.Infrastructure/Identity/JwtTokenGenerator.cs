@@ -19,7 +19,8 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
     public (string Token, DateTime ExpiresAt) GenerateAccessToken(string userId, string email, string fullName, string role)
     {
-        var secret = _configuration["JwtSettings:Secret"] ?? "TalentFlowDefaultSuperSecretKey123456789!#%&";
+        var secret = _configuration["JwtSettings:Secret"]
+            ?? throw new InvalidOperationException("Fatal: 'JwtSettings:Secret' configuration is missing.");
         var issuer = _configuration["JwtSettings:Issuer"] ?? "TalentFlowApi";
         var audience = _configuration["JwtSettings:Audience"] ?? "TalentFlowClient";
         var expiryMinutes = int.TryParse(_configuration["JwtSettings:ExpiryMinutes"], out var m) ? m : 15;

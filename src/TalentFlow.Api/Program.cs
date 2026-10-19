@@ -64,12 +64,15 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// CORS configuration allowing frontend dashboard and SignalR
+// CORS configuration with explicit origin allowlist from configuration
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[] { "http://localhost:5000", "https://localhost:5001", "http://localhost:3000" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("TalentFlowCors", policy =>
     {
-        policy.SetIsOriginAllowed(_ => true)
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -83,7 +86,7 @@ builder.Services.AddRateLimiter(options =>
 
     options.AddFixedWindowLimiter("auth-rate-limit", opt =>
     {
-        opt.PermitLimit = 10;
+        opt.PermitLimit = 5;
         opt.Window = TimeSpan.FromMinutes(1);
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         opt.QueueLimit = 0;
@@ -91,7 +94,7 @@ builder.Services.AddRateLimiter(options =>
 
     options.AddFixedWindowLimiter("apply-rate-limit", opt =>
     {
-        opt.PermitLimit = 20;
+        opt.PermitLimit = 10;
         opt.Window = TimeSpan.FromHours(1);
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         opt.QueueLimit = 0;
@@ -100,12 +103,15 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-// Seed database on startup
+// Seed database on startup (only in Development)
 using (var scope = app.Services.CreateScope())
 {
     var initialiser = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitialiser>();
     await initialiser.InitialiseAsync();
-    await initialiser.SeedAsync();
+    if (app.Environment.IsDevelopment())
+    {
+        await initialiser.SeedAsync();
+    }
 }
 
 // Exception handling middleware (RFC 7807 ProblemDetails)

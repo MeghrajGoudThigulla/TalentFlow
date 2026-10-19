@@ -273,6 +273,7 @@ public class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand, Guid>
         // 10. Real-time SignalR push to recruiter dashboards viewing the job
         await _notifier.NotifyApplicationCreated(job.Id, new
         {
+            JobId = job.Id,
             ApplicationId = application.Id,
             CandidateName = candidate.FullName,
             CandidateEmail = candidate.Email,

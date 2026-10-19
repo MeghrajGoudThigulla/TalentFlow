@@ -53,6 +53,12 @@ public class ExceptionHandlingMiddleware
                 conflictEx.Message,
                 null
             ),
+            Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException => (
+                HttpStatusCode.Conflict,
+                "Concurrency Conflict",
+                "The resource was modified by another operation. Please refresh and try again.",
+                null
+            ),
             ForbiddenException forbiddenEx => (
                 HttpStatusCode.Forbidden,
                 "Forbidden",
