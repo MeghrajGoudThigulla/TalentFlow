@@ -32,3 +32,6 @@ Thumbs.db
 *Resume*
 *.tex
 
+# Test results
+[Tt]est[Rr]esults/
+
