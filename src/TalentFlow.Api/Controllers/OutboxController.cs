@@ -10,16 +10,16 @@ namespace TalentFlow.Api.Controllers;
 public class OutboxController : ApiControllerBase
 {
     [HttpGet("failed")]
-    public async Task<ActionResult<List<OutboxMessageDto>>> GetFailed()
+    public async Task<ActionResult<List<OutboxMessageDto>>> GetFailed(CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new GetFailedOutboxQuery());
+        var result = await Mediator.Send(new GetFailedOutboxQuery(), cancellationToken);
         return Ok(result);
     }
 
     [HttpPost("{id:guid}/retry")]
-    public async Task<IActionResult> Retry(Guid id)
+    public async Task<IActionResult> Retry(Guid id, CancellationToken cancellationToken = default)
     {
-        await Mediator.Send(new RetryOutboxMessageCommand(id));
+        await Mediator.Send(new RetryOutboxMessageCommand(id), cancellationToken);
         return NoContent();
     }
 }

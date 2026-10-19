@@ -10,17 +10,17 @@ namespace TalentFlow.Api.Controllers;
 public class PipelineStagesController : ApiControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<PipelineStageDto>>> GetStages()
+    public async Task<ActionResult<List<PipelineStageDto>>> GetStages(CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new GetPipelineStagesQuery());
+        var result = await Mediator.Send(new GetPipelineStagesQuery(), cancellationToken);
         return Ok(result);
     }
 
     [HttpPut]
     [Authorize(Policy = "RequireAdmin")]
-    public async Task<ActionResult<List<PipelineStageDto>>> UpdateStages([FromBody] List<PipelineStageDto> stages)
+    public async Task<ActionResult<List<PipelineStageDto>>> UpdateStages([FromBody] List<PipelineStageDto> stages, CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new UpdatePipelineStagesCommand(stages));
+        var result = await Mediator.Send(new UpdatePipelineStagesCommand(stages), cancellationToken);
         return Ok(result);
     }
 }

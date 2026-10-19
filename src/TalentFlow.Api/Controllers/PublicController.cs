@@ -16,16 +16,18 @@ public class PublicController : ApiControllerBase
         [FromQuery] string? department,
         [FromQuery] string? location,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new GetPublicJobsQuery(search, department, location, page, pageSize));
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        var result = await Mediator.Send(new GetPublicJobsQuery(search, department, location, page, pageSize), cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("jobs/{id:guid}")]
-    public async Task<ActionResult<PublicJobDto>> GetOpenJobById(Guid id)
+    public async Task<ActionResult<PublicJobDto>> GetOpenJobById(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new GetPublicJobByIdQuery(id));
+        var result = await Mediator.Send(new GetPublicJobByIdQuery(id), cancellationToken);
         return Ok(result);
     }
 
@@ -38,7 +40,8 @@ public class PublicController : ApiControllerBase
         [FromForm] string email,
         [FromForm] string? phone,
         [FromForm] string? coverNote,
-        IFormFile resume)
+        IFormFile resume,
+        CancellationToken cancellationToken = default)
     {
         if (resume == null || resume.Length == 0)
         {
@@ -57,10 +60,10 @@ public class PublicController : ApiControllerBase
             resume.ContentType
         );
 
-        var applicationId = await Mediator.Send(command);
+        var applicationId = await Mediator.Send(command, cancellationToken);
 
         return Ok(new
-        {
+            {
             applicationId,
             message = "Application submitted successfully. A confirmation email has been queued."
         });

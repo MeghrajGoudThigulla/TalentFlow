@@ -94,6 +94,14 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
 
 public record RefreshTokenCommand(string RefreshToken) : IRequest<AuthResponseDto>;
 
+public class RefreshTokenCommandValidator : AbstractValidator<RefreshTokenCommand>
+{
+    public RefreshTokenCommandValidator()
+    {
+        RuleFor(x => x.RefreshToken).NotEmpty();
+    }
+}
+
 public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, AuthResponseDto>
 {
     private readonly IApplicationDbContext _context;
@@ -180,6 +188,14 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
 
 public record LogoutCommand(string RefreshToken) : IRequest<Unit>;
 
+public class LogoutCommandValidator : AbstractValidator<LogoutCommand>
+{
+    public LogoutCommandValidator()
+    {
+        RuleFor(x => x.RefreshToken).NotEmpty();
+    }
+}
+
 public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
@@ -206,6 +222,17 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Unit>
 }
 
 public record CreateUserCommand(string Email, string Password, string FullName, string Role) : IRequest<UserDto>;
+
+public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
+{
+    public CreateUserCommandValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+        RuleFor(x => x.Password).NotEmpty().MinimumLength(6);
+        RuleFor(x => x.FullName).NotEmpty().MaximumLength(150);
+        RuleFor(x => x.Role).NotEmpty();
+    }
+}
 
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserDto>
 {
@@ -248,6 +275,15 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>
 }
 
 public record UpdateUserRoleCommand(string UserId, string NewRole) : IRequest<bool>;
+
+public class UpdateUserRoleCommandValidator : AbstractValidator<UpdateUserRoleCommand>
+{
+    public UpdateUserRoleCommandValidator()
+    {
+        RuleFor(x => x.UserId).NotEmpty();
+        RuleFor(x => x.NewRole).NotEmpty();
+    }
+}
 
 public class UpdateUserRoleCommandHandler : IRequestHandler<UpdateUserRoleCommand, bool>
 {

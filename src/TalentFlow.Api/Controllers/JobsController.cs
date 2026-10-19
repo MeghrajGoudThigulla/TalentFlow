@@ -18,60 +18,62 @@ public class JobsController : ApiControllerBase
         [FromQuery] JobStatus? status,
         [FromQuery] string? location,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new GetJobsQuery(search, department, status, location, page, pageSize));
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        var result = await Mediator.Send(new GetJobsQuery(search, department, status, location, page, pageSize), cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<JobDto>> GetJobById(Guid id)
+    public async Task<ActionResult<JobDto>> GetJobById(Guid id, CancellationToken cancellationToken = default)
     {
-        var job = await Mediator.Send(new GetJobByIdQuery(id));
+        var job = await Mediator.Send(new GetJobByIdQuery(id), cancellationToken);
         return Ok(job);
     }
 
     [HttpPost]
     [Authorize(Policy = "RequireRecruiterOrAdmin")]
-    public async Task<ActionResult<JobDto>> CreateJob([FromBody] CreateJobCommand command)
+    public async Task<ActionResult<JobDto>> CreateJob([FromBody] CreateJobCommand command, CancellationToken cancellationToken = default)
     {
-        var job = await Mediator.Send(command);
+        var job = await Mediator.Send(command, cancellationToken);
         return CreatedAtAction(nameof(GetJobById), new { id = job.Id }, job);
     }
 
     [HttpPut("{id:guid}")]
     [Authorize(Policy = "RequireHiringManagerOrAbove")]
-    public async Task<ActionResult<JobDto>> UpdateJob(Guid id, [FromBody] UpdateJobCommand command)
+    public async Task<ActionResult<JobDto>> UpdateJob(Guid id, [FromBody] UpdateJobCommand command, CancellationToken cancellationToken = default)
     {
         if (id != command.Id)
         {
             return BadRequest("Job ID in URL does not match request body.");
         }
-        var job = await Mediator.Send(command);
+        var job = await Mediator.Send(command, cancellationToken);
         return Ok(job);
     }
 
     [HttpPost("{id:guid}/publish")]
     [Authorize(Policy = "RequireRecruiterOrAdmin")]
-    public async Task<ActionResult<JobDto>> PublishJob(Guid id)
+    public async Task<ActionResult<JobDto>> PublishJob(Guid id, CancellationToken cancellationToken = default)
     {
-        var job = await Mediator.Send(new PublishJobCommand(id));
+        var job = await Mediator.Send(new PublishJobCommand(id), cancellationToken);
         return Ok(job);
     }
 
     [HttpPost("{id:guid}/close")]
     [Authorize(Policy = "RequireRecruiterOrAdmin")]
-    public async Task<ActionResult<JobDto>> CloseJob(Guid id)
+    public async Task<ActionResult<JobDto>> CloseJob(Guid id, CancellationToken cancellationToken = default)
     {
-        var job = await Mediator.Send(new CloseJobCommand(id));
+        var job = await Mediator.Send(new CloseJobCommand(id), cancellationToken);
         return Ok(job);
     }
 
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = "RequireAdmin")]
-    public async Task<IActionResult> DeleteJob(Guid id)
+    public async Task<IActionResult> DeleteJob(Guid id, CancellationToken cancellationToken = default)
     {
-        await Mediator.Send(new DeleteJobCommand(id));
+        await Mediator.Send(new DeleteJobCommand(id), cancellationToken);
         return NoContent();
     }
 }

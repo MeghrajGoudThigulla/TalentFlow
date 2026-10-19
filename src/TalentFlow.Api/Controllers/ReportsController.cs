@@ -10,16 +10,16 @@ namespace TalentFlow.Api.Controllers;
 public class ReportsController : ApiControllerBase
 {
     [HttpGet("pipeline")]
-    public async Task<ActionResult<PipelineReportDto>> GetPipelineReport([FromQuery] Guid jobId)
+    public async Task<ActionResult<PipelineReportDto>> GetPipelineReport([FromQuery] Guid jobId, CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new GetPipelineReportQuery(jobId));
+        var result = await Mediator.Send(new GetPipelineReportQuery(jobId), cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("time-to-hire")]
-    public async Task<ActionResult<List<TimeToHireReportDto>>> GetTimeToHire([FromQuery] Guid? jobId)
+    public async Task<ActionResult<List<TimeToHireReportDto>>> GetTimeToHire([FromQuery] Guid? jobId, CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new GetTimeToHireReportQuery(jobId));
+        var result = await Mediator.Send(new GetTimeToHireReportQuery(jobId), cancellationToken);
         return Ok(result);
     }
 }

@@ -153,6 +153,15 @@ public record MoveApplicationCommand(
     bool AllowSkip = false
 ) : IRequest<ApplicationCardDto>;
 
+public class MoveApplicationCommandValidator : AbstractValidator<MoveApplicationCommand>
+{
+    public MoveApplicationCommandValidator()
+    {
+        RuleFor(x => x.ApplicationId).NotEmpty();
+        RuleFor(x => x.TargetStageId).NotEmpty();
+    }
+}
+
 public class MoveApplicationCommandHandler : IRequestHandler<MoveApplicationCommand, ApplicationCardDto>
 {
     private readonly IApplicationDbContext _context;
@@ -317,6 +326,16 @@ public record BulkMoveApplicationsCommand(
     string? Reason
 ) : IRequest<int>;
 
+public class BulkMoveApplicationsCommandValidator : AbstractValidator<BulkMoveApplicationsCommand>
+{
+    public BulkMoveApplicationsCommandValidator()
+    {
+        RuleFor(x => x.ApplicationIds).NotEmpty();
+        RuleForEach(x => x.ApplicationIds).NotEmpty();
+        RuleFor(x => x.TargetStageId).NotEmpty();
+    }
+}
+
 public class BulkMoveApplicationsCommandHandler : IRequestHandler<BulkMoveApplicationsCommand, int>
 {
     private readonly IApplicationDbContext _context;
@@ -407,6 +426,15 @@ public class BulkMoveApplicationsCommandHandler : IRequestHandler<BulkMoveApplic
 }
 
 public record AddNoteCommand(Guid ApplicationId, string Body) : IRequest<NoteDto>;
+
+public class AddNoteCommandValidator : AbstractValidator<AddNoteCommand>
+{
+    public AddNoteCommandValidator()
+    {
+        RuleFor(x => x.ApplicationId).NotEmpty();
+        RuleFor(x => x.Body).NotEmpty().MaximumLength(2000);
+    }
+}
 
 public class AddNoteCommandHandler : IRequestHandler<AddNoteCommand, NoteDto>
 {

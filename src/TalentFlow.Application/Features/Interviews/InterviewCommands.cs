@@ -232,6 +232,14 @@ public class SubmitFeedbackCommandHandler : IRequestHandler<SubmitFeedbackComman
 
 public record ApproveOfferCommand(Guid ApplicationId, string? Notes) : IRequest<OfferApprovalDto>;
 
+public class ApproveOfferCommandValidator : AbstractValidator<ApproveOfferCommand>
+{
+    public ApproveOfferCommandValidator()
+    {
+        RuleFor(x => x.ApplicationId).NotEmpty();
+    }
+}
+
 public class ApproveOfferCommandHandler : IRequestHandler<ApproveOfferCommand, OfferApprovalDto>
 {
     private readonly IApplicationDbContext _context;

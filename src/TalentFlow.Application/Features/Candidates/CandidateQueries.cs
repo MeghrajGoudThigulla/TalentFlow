@@ -50,10 +50,13 @@ public class SearchCandidatesQueryHandler : IRequestHandler<SearchCandidatesQuer
 
         var total = await query.CountAsync(cancellationToken);
 
+        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+        var pageNumber = Math.Max(1, request.PageNumber);
+
         var items = await query
             .OrderByDescending(c => c.CreatedAt)
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(c => new CandidateDto(
                 c.Id,
                 c.FullName,
@@ -81,7 +84,7 @@ public class SearchCandidatesQueryHandler : IRequestHandler<SearchCandidatesQuer
             ))
             .ToListAsync(cancellationToken);
 
-        return new PagedList<CandidateDto>(items, total, request.PageNumber, request.PageSize);
+        return new PagedList<CandidateDto>(items, total, pageNumber, pageSize);
     }
 }
 

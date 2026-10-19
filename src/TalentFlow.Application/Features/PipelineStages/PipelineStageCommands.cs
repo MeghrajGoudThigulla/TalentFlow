@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TalentFlow.Application.Common.Interfaces;
@@ -30,6 +31,19 @@ public class GetPipelineStagesQueryHandler : IRequestHandler<GetPipelineStagesQu
 }
 
 public record UpdatePipelineStagesCommand(List<PipelineStageDto> Stages) : IRequest<List<PipelineStageDto>>;
+
+public class UpdatePipelineStagesCommandValidator : AbstractValidator<UpdatePipelineStagesCommand>
+{
+    public UpdatePipelineStagesCommandValidator()
+    {
+        RuleFor(x => x.Stages).NotEmpty();
+        RuleForEach(x => x.Stages).ChildRules(stage =>
+        {
+            stage.RuleFor(s => s.Id).NotEmpty();
+            stage.RuleFor(s => s.Name).NotEmpty().MaximumLength(100);
+        });
+    }
+}
 
 public class UpdatePipelineStagesCommandHandler : IRequestHandler<UpdatePipelineStagesCommand, List<PipelineStageDto>>
 {

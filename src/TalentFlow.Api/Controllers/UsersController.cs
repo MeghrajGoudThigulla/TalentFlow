@@ -10,23 +10,23 @@ namespace TalentFlow.Api.Controllers;
 public class UsersController : ApiControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<UserDto>>> GetUsers()
+    public async Task<ActionResult<List<UserDto>>> GetUsers(CancellationToken cancellationToken = default)
     {
-        var users = await Mediator.Send(new GetUsersQuery());
+        var users = await Mediator.Send(new GetUsersQuery(), cancellationToken);
         return Ok(users);
     }
 
     [HttpPost]
-    public async Task<ActionResult<UserDto>> CreateUser([FromBody] CreateUserCommand command)
+    public async Task<ActionResult<UserDto>> CreateUser([FromBody] CreateUserCommand command, CancellationToken cancellationToken = default)
     {
-        var user = await Mediator.Send(command);
+        var user = await Mediator.Send(command, cancellationToken);
         return CreatedAtAction(nameof(GetUsers), new { id = user.Id }, user);
     }
 
     [HttpPut("{id}/role")]
-    public async Task<IActionResult> UpdateRole(string id, [FromBody] UpdateRoleRequest request)
+    public async Task<IActionResult> UpdateRole(string id, [FromBody] UpdateRoleRequest request, CancellationToken cancellationToken = default)
     {
-        var success = await Mediator.Send(new UpdateUserRoleCommand(id, request.Role));
+        var success = await Mediator.Send(new UpdateUserRoleCommand(id, request.Role), cancellationToken);
         if (!success) return NotFound();
         return NoContent();
     }

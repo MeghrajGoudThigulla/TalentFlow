@@ -18,22 +18,25 @@ public class ApplicationsController : ApiControllerBase
     }
 
     [HttpGet("/api/jobs/{jobId:guid}/applications")]
-    public async Task<ActionResult<List<ApplicationCardDto>>> GetJobApplications(Guid jobId)
+    public async Task<ActionResult<List<ApplicationCardDto>>> GetJobApplications(Guid jobId, CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new GetJobApplicationsQuery(jobId));
+        var result = await Mediator.Send(new GetJobApplicationsQuery(jobId), cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ApplicationDetailDto>> GetApplicationById(Guid id)
+    public async Task<ActionResult<ApplicationDetailDto>> GetApplicationById(Guid id, CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new GetApplicationByIdQuery(id));
+        var result = await Mediator.Send(new GetApplicationByIdQuery(id), cancellationToken);
         return Ok(result);
     }
 
     [HttpPost("{id:guid}/move")]
     [Authorize(Policy = "RequireRecruiterOrAdmin")]
-    public async Task<ActionResult<ApplicationCardDto>> MoveApplication(Guid id, [FromBody] MoveApplicationRequest request)
+    public async Task<ActionResult<ApplicationCardDto>> MoveApplication(
+        Guid id,
+        [FromBody] MoveApplicationRequest request,
+        CancellationToken cancellationToken = default)
     {
         var command = new MoveApplicationCommand(
             id,
@@ -43,30 +46,33 @@ public class ApplicationsController : ApiControllerBase
             request.AllowSkip
         );
 
-        var result = await Mediator.Send(command);
+        var result = await Mediator.Send(command, cancellationToken);
         return Ok(result);
     }
 
     [HttpPost("bulk-move")]
     [Authorize(Policy = "RequireRecruiterOrAdmin")]
-    public async Task<ActionResult<object>> BulkMove([FromBody] BulkMoveApplicationsCommand command)
+    public async Task<ActionResult<object>> BulkMove([FromBody] BulkMoveApplicationsCommand command, CancellationToken cancellationToken = default)
     {
-        var count = await Mediator.Send(command);
+        var count = await Mediator.Send(command, cancellationToken);
         return Ok(new { movedCount = count });
     }
 
     [HttpPost("{id:guid}/notes")]
     [Authorize(Policy = "RequireHiringManagerOrAbove")]
-    public async Task<ActionResult<NoteDto>> AddNote(Guid id, [FromBody] AddNoteRequest request)
+    public async Task<ActionResult<NoteDto>> AddNote(
+        Guid id,
+        [FromBody] AddNoteRequest request,
+        CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new AddNoteCommand(id, request.Body));
+        var result = await Mediator.Send(new AddNoteCommand(id, request.Body), cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("{id:guid}/resume")]
-    public async Task<IActionResult> DownloadResume(Guid id)
+    public async Task<IActionResult> DownloadResume(Guid id, CancellationToken cancellationToken = default)
     {
-        var app = await Mediator.Send(new GetApplicationByIdQuery(id));
+        var app = await Mediator.Send(new GetApplicationByIdQuery(id), cancellationToken);
         if (string.IsNullOrEmpty(app.ResumePath))
         {
             return NotFound("No resume found for this application.");
@@ -84,16 +90,19 @@ public class ApplicationsController : ApiControllerBase
 
     [HttpPost("{id:guid}/offer/approve")]
     [Authorize(Policy = "RequireHiringManagerOrAbove")]
-    public async Task<ActionResult<OfferApprovalDto>> ApproveOffer(Guid id, [FromBody] ApproveOfferRequest request)
+    public async Task<ActionResult<OfferApprovalDto>> ApproveOffer(
+        Guid id,
+        [FromBody] ApproveOfferRequest request,
+        CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new ApproveOfferCommand(id, request.Notes));
+        var result = await Mediator.Send(new ApproveOfferCommand(id, request.Notes), cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("{id:guid}/offer-letter")]
-    public async Task<IActionResult> GetOfferLetter(Guid id, [FromQuery] bool rawHtml = false)
+    public async Task<IActionResult> GetOfferLetter(Guid id, [FromQuery] bool rawHtml = false, CancellationToken cancellationToken = default)
     {
-        var offerLetter = await Mediator.Send(new GetOfferLetterQuery(id));
+        var offerLetter = await Mediator.Send(new GetOfferLetterQuery(id), cancellationToken);
         if (rawHtml)
         {
             return Content(offerLetter.HtmlDocument, "text/html");

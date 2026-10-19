@@ -37,16 +37,19 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
 
         var total = await query.CountAsync(cancellationToken);
 
+        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+        var pageNumber = Math.Max(1, request.PageNumber);
+
         var items = await query
             .OrderByDescending(a => a.OccurredAt)
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(a => new AuditLogDto(
                 a.Id, a.ActorId, a.ActorEmail, a.EntityType, a.EntityId,
                 a.Action, a.BeforeJson, a.AfterJson, a.CorrelationId, a.OccurredAt
             ))
             .ToListAsync(cancellationToken);
 
-        return new PagedList<AuditLogDto>(items, total, request.PageNumber, request.PageSize);
+        return new PagedList<AuditLogDto>(items, total, pageNumber, pageSize);
     }
 }

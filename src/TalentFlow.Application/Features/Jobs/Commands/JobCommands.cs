@@ -106,6 +106,23 @@ public record UpdateJobCommand(
     string? HiringManagerId
 ) : IRequest<JobDto>;
 
+public class UpdateJobCommandValidator : AbstractValidator<UpdateJobCommand>
+{
+    public UpdateJobCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.Title).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Department).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Location).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.EmploymentType).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.Openings).GreaterThan(0);
+        RuleFor(x => x.SalaryMax)
+            .GreaterThanOrEqualTo(x => x.SalaryMin!.Value)
+            .When(x => x.SalaryMin.HasValue && x.SalaryMax.HasValue)
+            .WithMessage("Maximum salary must be greater than or equal to minimum salary.");
+    }
+}
+
 public class UpdateJobCommandHandler : IRequestHandler<UpdateJobCommand, JobDto>
 {
     private readonly IApplicationDbContext _context;
@@ -154,6 +171,14 @@ public class UpdateJobCommandHandler : IRequestHandler<UpdateJobCommand, JobDto>
 
 public record PublishJobCommand(Guid Id) : IRequest<JobDto>;
 
+public class PublishJobCommandValidator : AbstractValidator<PublishJobCommand>
+{
+    public PublishJobCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty();
+    }
+}
+
 public class PublishJobCommandHandler : IRequestHandler<PublishJobCommand, JobDto>
 {
     private readonly IApplicationDbContext _context;
@@ -183,6 +208,14 @@ public class PublishJobCommandHandler : IRequestHandler<PublishJobCommand, JobDt
 
 public record CloseJobCommand(Guid Id) : IRequest<JobDto>;
 
+public class CloseJobCommandValidator : AbstractValidator<CloseJobCommand>
+{
+    public CloseJobCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty();
+    }
+}
+
 public class CloseJobCommandHandler : IRequestHandler<CloseJobCommand, JobDto>
 {
     private readonly IApplicationDbContext _context;
@@ -211,6 +244,14 @@ public class CloseJobCommandHandler : IRequestHandler<CloseJobCommand, JobDto>
 }
 
 public record DeleteJobCommand(Guid Id) : IRequest<Unit>;
+
+public class DeleteJobCommandValidator : AbstractValidator<DeleteJobCommand>
+{
+    public DeleteJobCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty();
+    }
+}
 
 public class DeleteJobCommandHandler : IRequestHandler<DeleteJobCommand, Unit>
 {

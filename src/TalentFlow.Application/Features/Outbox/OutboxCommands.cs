@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TalentFlow.Application.Common.Exceptions;
@@ -35,6 +36,14 @@ public class GetFailedOutboxQueryHandler : IRequestHandler<GetFailedOutboxQuery,
 }
 
 public record RetryOutboxMessageCommand(Guid Id) : IRequest<Unit>;
+
+public class RetryOutboxMessageCommandValidator : AbstractValidator<RetryOutboxMessageCommand>
+{
+    public RetryOutboxMessageCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty();
+    }
+}
 
 public class RetryOutboxMessageCommandHandler : IRequestHandler<RetryOutboxMessageCommand, Unit>
 {

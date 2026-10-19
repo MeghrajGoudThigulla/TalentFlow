@@ -62,10 +62,13 @@ public class GetJobsQueryHandler : IRequestHandler<GetJobsQuery, PagedList<JobDt
 
         var totalCount = await query.CountAsync(cancellationToken);
 
+        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+        var pageNumber = Math.Max(1, request.PageNumber);
+
         var items = await query
             .OrderByDescending(j => j.CreatedAt)
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(j => new JobDto(
                 j.Id,
                 j.Title,
@@ -88,7 +91,7 @@ public class GetJobsQueryHandler : IRequestHandler<GetJobsQuery, PagedList<JobDt
             ))
             .ToListAsync(cancellationToken);
 
-        return new PagedList<JobDto>(items, totalCount, request.PageNumber, request.PageSize);
+        return new PagedList<JobDto>(items, totalCount, pageNumber, pageSize);
     }
 }
 

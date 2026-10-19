@@ -52,10 +52,13 @@ public class GetPublicJobsQueryHandler : IRequestHandler<GetPublicJobsQuery, Pag
 
         var totalCount = await query.CountAsync(cancellationToken);
 
+        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+        var pageNumber = Math.Max(1, request.PageNumber);
+
         var items = await query
             .OrderByDescending(j => j.PublishedAt)
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(j => new PublicJobDto(
                 j.Id,
                 j.Title,
@@ -71,7 +74,7 @@ public class GetPublicJobsQueryHandler : IRequestHandler<GetPublicJobsQuery, Pag
             ))
             .ToListAsync(cancellationToken);
 
-        return new PagedList<PublicJobDto>(items, totalCount, request.PageNumber, request.PageSize);
+        return new PagedList<PublicJobDto>(items, totalCount, pageNumber, pageSize);
     }
 }
 
