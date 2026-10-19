@@ -338,6 +338,11 @@ public class BulkMoveApplicationsCommandHandler : IRequestHandler<BulkMoveApplic
         var targetStage = await _context.PipelineStages.FirstOrDefaultAsync(s => s.Id == request.TargetStageId, cancellationToken)
             ?? throw new NotFoundException(nameof(PipelineStage), request.TargetStageId);
 
+        if (targetStage.Kind != StageKind.Rejected)
+        {
+            throw new ConflictException("Bulk move is only permitted to the Rejected stage.");
+        }
+
         var apps = await _context.Applications
             .Include(a => a.Job)
             .Include(a => a.Candidate)
@@ -348,6 +353,19 @@ public class BulkMoveApplicationsCommandHandler : IRequestHandler<BulkMoveApplic
         int moved = 0;
         foreach (var app in apps)
         {
+            var ruleCheck = StageTransitionValidator.Validate(
+                app.CurrentStage,
+                targetStage,
+                hasInterviewFeedback: false,
+                hasOfferApproval: false,
+                allowSkip: false,
+                userRole: _currentUser.Role ?? "");
+
+            if (!ruleCheck.IsValid)
+            {
+                continue;
+            }
+
             var prevStageId = app.CurrentStageId;
             app.CurrentStageId = targetStage.Id;
             app.RowVersion = Guid.NewGuid().ToByteArray();
