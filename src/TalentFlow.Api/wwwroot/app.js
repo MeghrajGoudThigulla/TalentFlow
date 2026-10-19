@@ -66,20 +66,15 @@ function renderWorkspaceProfile() {
   avatarInitials.textContent = initials;
 }
 
-// Quick fill credentials chip handler
+// Quick fill credentials handler (helper if needed)
 function fillCredentials(email, password, roleName) {
-  document.getElementById('login-email').value = email;
-  document.getElementById('login-password').value = password;
-  document.getElementById('role-preview-tag').textContent = `Role: ${roleName}`;
-
-  // Update active chip styling
-  document.querySelectorAll('.demo-chip').forEach(c => c.classList.remove('active'));
-  if (roleName === 'Recruiter') document.querySelector('.chip-recruiter')?.classList.add('active');
-  if (roleName === 'Hiring Manager') document.querySelector('.chip-hm')?.classList.add('active');
-  if (roleName === 'Admin') document.querySelector('.chip-admin')?.classList.add('active');
-
-  // Clear any existing error
-  document.getElementById('auth-error-banner').classList.add('hidden');
+  const emailInput = document.getElementById('login-email');
+  const passwordInput = document.getElementById('login-password');
+  const rolePreview = document.getElementById('role-preview-tag');
+  if (emailInput) emailInput.value = email;
+  if (passwordInput) passwordInput.value = password;
+  if (rolePreview) rolePreview.textContent = `Role: ${roleName}`;
+  document.getElementById('auth-error-banner')?.classList.add('hidden');
 }
 
 // Toggle password text visibility

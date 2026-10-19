@@ -137,25 +137,6 @@
             <p>Access your hiring pipeline, candidate scoring, and offer workflows.</p>
           </div>
 
-          <!-- Quick Fill Demo Selector Chips -->
-          <div class="demo-fill-container">
-            <div class="demo-fill-title">1-Click Quick Fill Credentials:</div>
-            <div class="demo-chips">
-              <button type="button" class="demo-chip chip-recruiter active" onclick="fillCredentials('recruiter@talentflow.local', 'Recruiter@123456', 'Recruiter')">
-                <span class="chip-dot"></span>
-                <span>Recruiter</span>
-              </button>
-              <button type="button" class="demo-chip chip-hm" onclick="fillCredentials('hiringmanager@talentflow.local', 'Manager@123456', 'Hiring Manager')">
-                <span class="chip-dot"></span>
-                <span>Hiring Mgr</span>
-              </button>
-              <button type="button" class="demo-chip chip-admin" onclick="fillCredentials('admin@talentflow.local', 'Admin@123456', 'Admin')">
-                <span class="chip-dot"></span>
-                <span>Admin</span>
-              </button>
-            </div>
-          </div>
-
           <!-- Error Alert Banner -->
           <div id="auth-error-banner" class="auth-alert hidden">
             <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -172,20 +153,19 @@
                 <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
                 </svg>
-                <input type="email" id="login-email" value="recruiter@talentflow.local" required autocomplete="email" placeholder="name@company.com">
+                <input type="email" id="login-email" required autocomplete="email" placeholder="name@company.com">
               </div>
             </div>
 
             <div class="form-field">
               <div class="field-label-row">
                 <label for="login-password">Password</label>
-                <span class="field-helper" id="role-preview-tag">Role: Recruiter</span>
               </div>
               <div class="input-container">
                 <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <input type="password" id="login-password" value="Recruiter@123456" required autocomplete="current-password" placeholder="••••••••••••">
+                <input type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••••••">
                 <button type="button" class="eye-toggle-btn" onclick="togglePasswordVisibility('login-password', this)">
                   <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
