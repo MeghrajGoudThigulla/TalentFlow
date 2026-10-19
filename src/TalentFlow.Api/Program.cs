@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
+using Serilog;
 using TalentFlow.Api.Middleware;
 using TalentFlow.Api.Services;
 using TalentFlow.Application;
@@ -10,6 +11,13 @@ using TalentFlow.Infrastructure.Persistence;
 using TalentFlow.Infrastructure.RealTime;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog structured logging with CorrelationId enrichment
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}"));
 
 // Dynamically bind to cloud provider PORT (Render, Koyeb, Fly.io, Railway) if specified
 var envPort = Environment.GetEnvironmentVariable("PORT");
@@ -113,6 +121,12 @@ using (var scope = app.Services.CreateScope())
         await initialiser.SeedAsync();
     }
 }
+
+// Correlation ID middleware (ensures X-Correlation-ID is tracked across all logs and response headers)
+app.UseMiddleware<CorrelationIdMiddleware>();
+
+// Serilog HTTP request logging
+app.UseSerilogRequestLogging();
 
 // Exception handling middleware (RFC 7807 ProblemDetails)
 app.UseMiddleware<ExceptionHandlingMiddleware>();

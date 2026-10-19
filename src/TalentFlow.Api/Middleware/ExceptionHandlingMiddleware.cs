@@ -88,6 +88,10 @@ public class ExceptionHandlingMiddleware
         };
 
         problemDetails.Extensions["traceId"] = traceId;
+        if (context.Items.TryGetValue("CorrelationId", out var correlationId) && correlationId is string correlationIdStr)
+        {
+            problemDetails.Extensions["correlationId"] = correlationIdStr;
+        }
 
         if (errors != null)
         {
