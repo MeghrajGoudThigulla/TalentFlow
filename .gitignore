@@ -26,3 +26,9 @@ uploads/resumes/*
 # OS generated
 .DS_Store
 Thumbs.db
+
+# Resumes and LaTeX
+*resume*
+*Resume*
+*.tex
+
