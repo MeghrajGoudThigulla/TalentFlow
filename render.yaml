@@ -1,0 +1,39 @@
+# Render Blueprint Specification (Infrastructure-as-Code)
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: talentflow-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    branch: main
+    autoDeploy: false
+    healthCheckPath: /health/ready
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: UseSqlServer
+        value: "false"
+      - key: ConnectionStrings__DefaultConnection
+        value: "Data Source=/app/data/talentflow.db"
+      - key: JwtSettings__Issuer
+        value: TalentFlowApi
+      - key: JwtSettings__Audience
+        value: TalentFlowClient
+      - key: JwtSettings__ExpiryMinutes
+        value: "15"
+      - key: JwtSettings__Secret
+        generateValue: true
+      - key: Cors__AllowedOrigins__0
+        value: "https://talentflow-api.onrender.com"
+      - key: EmailSettings__FromEmail
+        value: "noreply@talentflow.local"
+      - key: EmailSettings__FromName
+        value: "TalentFlow ATS"
+    disk:
+      name: talentflow-data
+      mountPath: /app/data
+      sizeGB: 1

@@ -29,8 +29,8 @@ RUN dotnet publish "TalentFlow.Api.csproj" -c Release -o /app/publish /p:UseAppH
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-# Create upload directory and non-root app user
-RUN mkdir -p /app/uploads/resumes && chown -R $APP_UID:$APP_UID /app
+# Create upload & data directories and set non-root app user ownership
+RUN mkdir -p /app/uploads/resumes /app/data && chown -R $APP_UID:$APP_UID /app
 USER $APP_UID
 
 COPY --from=publish /app/publish .
