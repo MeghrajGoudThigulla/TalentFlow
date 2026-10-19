@@ -11,6 +11,13 @@ using TalentFlow.Infrastructure.RealTime;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Dynamically bind to cloud provider PORT (Render, Koyeb, Fly.io, Railway) if specified
+var envPort = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(envPort))
+{
+    builder.WebHost.UseUrls($"http://+:{envPort}");
+}
+
 // Add Application and Infrastructure layers
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
