@@ -23,7 +23,7 @@ jobs:
       run: dotnet restore TalentFlow.sln
 
     - name: Build solution
-      run: dotnet build TalentFlow.sln --configuration Release --no-restore
+      run: dotnet build TalentFlow.sln --configuration Release --no-restore --warnaserror
 
     - name: Run Unit & Integration Tests
       run: dotnet test TalentFlow.sln --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"

@@ -10,6 +10,7 @@ COPY ["src/TalentFlow.Infrastructure/TalentFlow.Infrastructure.csproj", "src/Tal
 COPY ["src/TalentFlow.Api/TalentFlow.Api.csproj", "src/TalentFlow.Api/"]
 COPY ["tests/TalentFlow.Domain.Tests/TalentFlow.Domain.Tests.csproj", "tests/TalentFlow.Domain.Tests/"]
 COPY ["tests/TalentFlow.Application.Tests/TalentFlow.Application.Tests.csproj", "tests/TalentFlow.Application.Tests/"]
+COPY ["tests/TalentFlow.Api.IntegrationTests/TalentFlow.Api.IntegrationTests.csproj", "tests/TalentFlow.Api.IntegrationTests/"]
 
 RUN dotnet restore "TalentFlow.sln"
 
