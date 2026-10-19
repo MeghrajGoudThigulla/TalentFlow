@@ -49,7 +49,7 @@ public class OutboxProcessor : BackgroundService
         _logger.LogInformation("OutboxProcessor background worker stopping.");
     }
 
-    private async Task ProcessPendingMessagesAsync(CancellationToken cancellationToken)
+    public async Task ProcessPendingMessagesAsync(CancellationToken cancellationToken = default)
     {
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -57,8 +57,7 @@ public class OutboxProcessor : BackgroundService
 
         var now = DateTime.UtcNow;
 
-        // Reclaim stuck processing messages older than 5 minutes
-        var stuckThreshold = now.AddMinutes(-5);
+        // 1. Reclaim stuck processing messages older than 5 minutes
         var stuckMessages = await context.OutboxMessages
             .Where(m => m.Status == OutboxMessageStatus.Processing && m.LockedUntil < now)
             .ToListAsync(cancellationToken);
@@ -74,27 +73,52 @@ public class OutboxProcessor : BackgroundService
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        // Fetch up to 20 pending messages where NextAttemptAt <= now
-        var pending = await context.OutboxMessages
-            .Where(m => m.Status == OutboxMessageStatus.Pending && (m.NextAttemptAt == null || m.NextAttemptAt <= now))
-            .OrderBy(m => m.CreatedAt)
-            .Take(20)
-            .ToListAsync(cancellationToken);
-
-        if (!pending.Any())
+        // 2. Claim up to 20 pending messages atomically
+        List<OutboxMessage> pending;
+        if (context.Database.IsSqlServer())
         {
-            return;
+            var lockUntil = now.AddMinutes(5);
+            var claimedIds = await context.Database.SqlQueryRaw<Guid>(
+                @"UPDATE TOP (20) OutboxMessages WITH (UPDLOCK, READPAST)
+                  SET Status = 1, LockedUntil = {0}
+                  OUTPUT INSERTED.Id
+                  WHERE Status = 0 AND (NextAttemptAt IS NULL OR NextAttemptAt <= {1})",
+                lockUntil, now)
+                .ToListAsync(cancellationToken);
+
+            if (!claimedIds.Any())
+            {
+                return;
+            }
+
+            pending = await context.OutboxMessages
+                .Where(m => claimedIds.Contains(m.Id))
+                .ToListAsync(cancellationToken);
+        }
+        else
+        {
+            using var tx = await context.Database.BeginTransactionAsync(cancellationToken);
+            pending = await context.OutboxMessages
+                .Where(m => m.Status == OutboxMessageStatus.Pending && (m.NextAttemptAt == null || m.NextAttemptAt <= now))
+                .OrderBy(m => m.CreatedAt)
+                .Take(20)
+                .ToListAsync(cancellationToken);
+
+            if (!pending.Any())
+            {
+                return;
+            }
+
+            foreach (var msg in pending)
+            {
+                msg.Status = OutboxMessageStatus.Processing;
+                msg.LockedUntil = now.AddMinutes(5);
+            }
+            await context.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
         }
 
-        // Mark as Processing and lock for 5 minutes
-        foreach (var msg in pending)
-        {
-            msg.Status = OutboxMessageStatus.Processing;
-            msg.LockedUntil = now.AddMinutes(5);
-        }
-        await context.SaveChangesAsync(cancellationToken);
-
-        // Process each message
+        // 3. Process each claimed message
         foreach (var msg in pending)
         {
             try

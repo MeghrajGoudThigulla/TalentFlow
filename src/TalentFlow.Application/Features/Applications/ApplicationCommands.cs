@@ -258,7 +258,7 @@ public class MoveApplicationCommandHandler : IRequestHandler<MoveApplicationComm
             ToAddress = app.Candidate.Email,
             Subject = emailSubject,
             Body = emailBody,
-            DedupeKey = $"stage-change-{app.Id}-{targetStage.Id}-{DateTime.UtcNow.Ticks}",
+            DedupeKey = $"stage-transition-{transition.Id}",
             Status = OutboxMessageStatus.Pending,
             Attempts = 0,
             NextAttemptAt = DateTime.UtcNow,
@@ -353,9 +353,10 @@ public class BulkMoveApplicationsCommandHandler : IRequestHandler<BulkMoveApplic
             app.RowVersion = Guid.NewGuid().ToByteArray();
             app.UpdatedAt = DateTime.UtcNow;
 
+            var transitionId = Guid.NewGuid();
             _context.StageTransitions.Add(new StageTransition
             {
-                Id = Guid.NewGuid(),
+                Id = transitionId,
                 ApplicationId = app.Id,
                 FromStageId = prevStageId,
                 ToStageId = targetStage.Id,
@@ -372,7 +373,7 @@ public class BulkMoveApplicationsCommandHandler : IRequestHandler<BulkMoveApplic
                 ToAddress = app.Candidate.Email,
                 Subject = $"Update regarding your application for {app.Job.Title}",
                 Body = $"Dear {app.Candidate.FullName},<br/><br/>Your application has been moved to {targetStage.Name}.<br/><br/>Reason: {request.Reason ?? "Status update"}",
-                DedupeKey = $"bulk-move-{app.Id}-{DateTime.UtcNow.Ticks}",
+                DedupeKey = $"bulk-move-{transitionId}",
                 Status = OutboxMessageStatus.Pending,
                 Attempts = 0,
                 NextAttemptAt = DateTime.UtcNow,
