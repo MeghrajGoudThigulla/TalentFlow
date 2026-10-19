@@ -423,3 +423,169 @@ public class AddNoteCommandHandler : IRequestHandler<AddNoteCommand, NoteDto>
         return dto;
     }
 }
+
+public record GetOfferLetterQuery(Guid ApplicationId) : IRequest<OfferLetterDto>;
+
+public class GetOfferLetterQueryHandler : IRequestHandler<GetOfferLetterQuery, OfferLetterDto>
+{
+    private readonly IApplicationDbContext _context;
+
+    public GetOfferLetterQueryHandler(IApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<OfferLetterDto> Handle(GetOfferLetterQuery request, CancellationToken cancellationToken)
+    {
+        var app = await _context.Applications
+            .Include(a => a.Job)
+            .Include(a => a.Candidate)
+            .Include(a => a.OfferApproval)
+            .FirstOrDefaultAsync(a => a.Id == request.ApplicationId, cancellationToken)
+            ?? throw new NotFoundException(nameof(DomainApplication), request.ApplicationId);
+
+        if (app.OfferApproval == null)
+        {
+            throw new ConflictException("An offer letter can only be generated after offer approval has been granted.");
+        }
+
+        var annualCtc = app.Job.SalaryMax ?? app.Job.SalaryMin ?? 1800000m;
+        var monthlyGross = Math.Round(annualCtc / 12m, 2);
+        var baseSalary = Math.Round(monthlyGross * 0.50m, 2);
+        var hra = Math.Round(monthlyGross * 0.20m, 2);
+        var specialAllowance = monthlyGross - baseSalary - hra;
+
+        var refNumber = $"TF-OFF-{DateTime.UtcNow.Year}-{app.Id.ToString()[..8].ToUpper()}";
+        var joiningDate = app.OfferApproval.ApprovedAt.AddDays(14);
+        var approvedBy = app.OfferApproval.ApprovedByName;
+
+        var htmlDocument = $@"
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'/>
+  <title>Employment Offer Letter - {app.Candidate.FullName}</title>
+  <style>
+    body {{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; line-height: 1.6; max-width: 800px; margin: 0 auto; }}
+    .header {{ border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }}
+    .logo {{ font-size: 24px; font-weight: bold; color: #2563eb; letter-spacing: -0.5px; }}
+    .ref-no {{ font-size: 13px; color: #64748b; }}
+    .title {{ font-size: 20px; font-weight: bold; margin: 20px 0 10px 0; text-align: center; text-transform: uppercase; color: #0f172a; }}
+    .section {{ margin-top: 20px; }}
+    .section-title {{ font-size: 14px; font-weight: bold; color: #2563eb; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; }}
+    table {{ width: 100%; border-collapse: collapse; margin-top: 10px; }}
+    th, td {{ padding: 8px 12px; border: 1px solid #cbd5e1; font-size: 13px; text-align: left; }}
+    th {{ background: #f1f5f9; font-weight: 600; }}
+    .total-row {{ font-weight: bold; background: #f8fafc; }}
+    .clauses {{ font-size: 12px; color: #475569; }}
+    .signatures {{ margin-top: 40px; display: flex; justify-content: space-between; }}
+    .signature-block {{ width: 45%; border-top: 1px solid #94a3b8; padding-top: 8px; font-size: 13px; }}
+  </style>
+</head>
+<body>
+  <div class='header'>
+    <div>
+      <div class='logo'>TalentFlow ATS</div>
+      <div style='font-size: 12px; color: #64748b;'>Enterprise Workforce & Recruitment Ecosystem</div>
+    </div>
+    <div class='ref-no'>
+      <strong>Ref:</strong> {refNumber}<br/>
+      <strong>Date:</strong> {app.OfferApproval.ApprovedAt:MMMM dd, yyyy}
+    </div>
+  </div>
+
+  <div class='title'>Confidential Employment Offer</div>
+
+  <p>Dear <strong>{app.Candidate.FullName}</strong>,</p>
+  <p>On behalf of <strong>TalentFlow</strong>, we are delighted to offer you the full-time position of <strong>{app.Job.Title}</strong> in our <strong>{app.Job.Department}</strong> department.</p>
+
+  <div class='section'>
+    <div class='section-title'>1. Position Details</div>
+    <ul>
+      <li><strong>Position Title:</strong> {app.Job.Title}</li>
+      <li><strong>Department:</strong> {app.Job.Department}</li>
+      <li><strong>Work Location:</strong> {app.Job.Location}</li>
+      <li><strong>Employment Type:</strong> {app.Job.EmploymentType}</li>
+      <li><strong>Anticipated Joining Date:</strong> {joiningDate:MMMM dd, yyyy}</li>
+      <li><strong>Reporting Manager:</strong> {approvedBy}</li>
+    </ul>
+  </div>
+
+  <div class='section'>
+    <div class='section-title'>2. Compensation Breakdown</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Salary Component</th>
+          <th>Monthly (INR)</th>
+          <th>Annualized (INR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Basic Salary (50%)</td>
+          <td>₹{baseSalary:N2}</td>
+          <td>₹{(baseSalary * 12):N2}</td>
+        </tr>
+        <tr>
+          <td>House Rent Allowance (HRA - 20%)</td>
+          <td>₹{hra:N2}</td>
+          <td>₹{(hra * 12):N2}</td>
+        </tr>
+        <tr>
+          <td>Special Allowance & Flexi Benefits</td>
+          <td>₹{specialAllowance:N2}</td>
+          <td>₹{(specialAllowance * 12):N2}</td>
+        </tr>
+        <tr class='total-row'>
+          <td><strong>Cost to Company (Total CTC)</strong></td>
+          <td><strong>₹{monthlyGross:N2}</strong></td>
+          <td><strong>₹{annualCtc:N2}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class='section clauses'>
+    <div class='section-title'>3. Terms & Employment Conditions</div>
+    <p><strong>A. Background Verification (BGV):</strong> This offer is contingent upon successful verification of past credentials, educational records, identity, and employment references through our verification partners.</p>
+    <p><strong>B. Intellectual Property & Confidentiality:</strong> All software, patents, documents, and technical assets developed during your employment shall remain the sole exclusive property of the company.</p>
+    <p><strong>C. AI & Data Security:</strong> You agree to adhere strictly to enterprise security guidelines, confidential code protection protocols, and ethical AI deployment principles.</p>
+    <p><strong>D. Notice Period:</strong> Standard notice period is 60 days following the probation period of 90 days.</p>
+  </div>
+
+  <div class='signatures'>
+    <div class='signature-block'>
+      <strong>Authorized Signatory</strong><br/>
+      {approvedBy}<br/>
+      TalentFlow Hiring Authority
+    </div>
+    <div class='signature-block'>
+      <strong>Candidate Acceptance</strong><br/>
+      {app.Candidate.FullName}<br/>
+      Signature & Date: ___________________
+    </div>
+  </div>
+</body>
+</html>";
+
+        return new OfferLetterDto(
+            refNumber,
+            app.Candidate.FullName,
+            app.Candidate.Email,
+            app.Job.Title,
+            app.Job.Department,
+            app.Job.Location,
+            annualCtc,
+            monthlyGross,
+            baseSalary,
+            hra,
+            specialAllowance,
+            joiningDate,
+            approvedBy,
+            approvedBy,
+            app.OfferApproval.ApprovedAt,
+            htmlDocument
+        );
+    }
+}

@@ -111,6 +111,25 @@ public record OfferApprovalDto(
     string? Notes
 );
 
+public record OfferLetterDto(
+    string ReferenceNumber,
+    string CandidateName,
+    string CandidateEmail,
+    string JobTitle,
+    string Department,
+    string Location,
+    decimal AnnualCtc,
+    decimal MonthlyGross,
+    decimal BaseSalary,
+    decimal Hra,
+    decimal SpecialAllowance,
+    DateTime JoiningDate,
+    string ReportingManager,
+    string ApprovedBy,
+    DateTime ApprovedAt,
+    string HtmlDocument
+);
+
 public record ApplicationDetailDto(
     Guid Id,
     Guid JobId,

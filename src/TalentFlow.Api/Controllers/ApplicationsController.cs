@@ -89,6 +89,17 @@ public class ApplicationsController : ApiControllerBase
         var result = await Mediator.Send(new ApproveOfferCommand(id, request.Notes));
         return Ok(result);
     }
+
+    [HttpGet("api/applications/{id:guid}/offer-letter")]
+    public async Task<IActionResult> GetOfferLetter(Guid id, [FromQuery] bool rawHtml = false)
+    {
+        var offerLetter = await Mediator.Send(new GetOfferLetterQuery(id));
+        if (rawHtml)
+        {
+            return Content(offerLetter.HtmlDocument, "text/html");
+        }
+        return Ok(offerLetter);
+    }
 }
 
 public record MoveApplicationRequest(Guid TargetStageId, string? Reason, string ConcurrencyToken, bool AllowSkip = false);

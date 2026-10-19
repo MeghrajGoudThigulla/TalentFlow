@@ -364,7 +364,8 @@ async function openApplicationModal(appId) {
     if (app.offerApproval) {
       offerBox.innerHTML = `
         <div class="badge badge-success mb-1">Approved by ${escapeHtml(app.offerApproval.approvedByName)}</div>
-        <p class="text-muted" style="font-size: 0.8rem;">${new Date(app.offerApproval.approvedAt).toLocaleString()}</p>
+        <p class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.5rem;">${new Date(app.offerApproval.approvedAt).toLocaleString()}</p>
+        <button class="btn btn-sm btn-primary" onclick="window.open('/api/applications/${app.id}/offer-letter?rawHtml=true', '_blank')">📄 View Official Offer Letter</button>
       `;
     } else {
       offerBox.innerHTML = `
