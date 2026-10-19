@@ -4,12 +4,14 @@ WORKDIR /src
 
 # Copy solution and project files first to optimize layer caching
 COPY ["TalentFlow.sln", "./"]
+COPY ["Directory.Build.props", "./"]
 COPY ["src/TalentFlow.Domain/TalentFlow.Domain.csproj", "src/TalentFlow.Domain/"]
 COPY ["src/TalentFlow.Application/TalentFlow.Application.csproj", "src/TalentFlow.Application/"]
 COPY ["src/TalentFlow.Infrastructure/TalentFlow.Infrastructure.csproj", "src/TalentFlow.Infrastructure/"]
 COPY ["src/TalentFlow.Api/TalentFlow.Api.csproj", "src/TalentFlow.Api/"]
 COPY ["tests/TalentFlow.Domain.Tests/TalentFlow.Domain.Tests.csproj", "tests/TalentFlow.Domain.Tests/"]
 COPY ["tests/TalentFlow.Application.Tests/TalentFlow.Application.Tests.csproj", "tests/TalentFlow.Application.Tests/"]
+COPY ["tests/TalentFlow.ArchitectureTests/TalentFlow.ArchitectureTests.csproj", "tests/TalentFlow.ArchitectureTests/"]
 COPY ["tests/TalentFlow.Api.IntegrationTests/TalentFlow.Api.IntegrationTests.csproj", "tests/TalentFlow.Api.IntegrationTests/"]
 
 RUN dotnet restore "TalentFlow.sln"
