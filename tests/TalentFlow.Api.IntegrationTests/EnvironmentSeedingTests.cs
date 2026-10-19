@@ -21,53 +21,46 @@ public class EnvironmentSeedingTests
         using var connection = new SqliteConnection("DataSource=:memory:");
         connection.Open();
 
-        Environment.SetEnvironmentVariable("JwtSettings__Secret", "ProductionTestSecretKeyThatIsAtLeast32BytesLong!");
-        try
-        {
-            using var factory = new WebApplicationFactory<Program>()
-                .WithWebHostBuilder(builder =>
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment("Production");
+                builder.UseSetting("JwtSettings:Secret", "ProductionTestSecretKeyThatIsAtLeast32BytesLong!");
+
+                builder.ConfigureServices(services =>
                 {
-                    builder.UseEnvironment("Production");
-
-                    builder.ConfigureServices(services =>
+                    var dbContextDescriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+                    if (dbContextDescriptor != null)
                     {
-                        var dbContextDescriptor = services.SingleOrDefault(
-                            d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                        if (dbContextDescriptor != null)
-                        {
-                            services.Remove(dbContextDescriptor);
-                        }
+                        services.Remove(dbContextDescriptor);
+                    }
 
-                        var dbConnectionDescriptor = services.SingleOrDefault(
-                            d => d.ServiceType == typeof(DbConnection));
-                        if (dbConnectionDescriptor != null)
-                        {
-                            services.Remove(dbConnectionDescriptor);
-                        }
+                    var dbConnectionDescriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbConnection));
+                    if (dbConnectionDescriptor != null)
+                    {
+                        services.Remove(dbConnectionDescriptor);
+                    }
 
-                        services.AddDbContext<ApplicationDbContext>(options =>
-                        {
-                            options.UseSqlite(connection);
-                        });
+                    services.AddDbContext<ApplicationDbContext>(options =>
+                    {
+                        options.UseSqlite(connection);
                     });
                 });
+            });
 
-            // Trigger host startup
-            using var client = factory.CreateClient();
+        // Trigger host startup
+        using var client = factory.CreateClient();
 
-            using var scope = factory.Services.CreateScope();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        using var scope = factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-            // In Production, admin@talentflow.local should NOT have been seeded
-            var adminUser = await userManager.FindByEmailAsync("admin@talentflow.local");
-            adminUser.Should().BeNull("default admin user must never be seeded in non-Development environments");
+        // In Production, admin@talentflow.local should NOT have been seeded
+        var adminUser = await userManager.FindByEmailAsync("admin@talentflow.local");
+        adminUser.Should().BeNull("default admin user must never be seeded in non-Development environments");
 
-            var recruiterUser = await userManager.FindByEmailAsync("recruiter@talentflow.local");
-            recruiterUser.Should().BeNull("sample users must not be seeded in non-Development environments");
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("JwtSettings__Secret", null);
-        }
+        var recruiterUser = await userManager.FindByEmailAsync("recruiter@talentflow.local");
+        recruiterUser.Should().BeNull("sample users must not be seeded in non-Development environments");
     }
 }

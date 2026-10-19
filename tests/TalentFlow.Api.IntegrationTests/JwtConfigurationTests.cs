@@ -15,13 +15,7 @@ public class JwtConfigurationTests
             .WithWebHostBuilder(builder =>
             {
                 builder.UseEnvironment("Production");
-                builder.ConfigureAppConfiguration((_, config) =>
-                {
-                    config.AddInMemoryCollection(new Dictionary<string, string?>
-                    {
-                        ["JwtSettings:Secret"] = ""
-                    });
-                });
+                builder.UseSetting("JwtSettings:Secret", "");
             });
 
         var act = () => factory.CreateClient();
