@@ -288,3 +288,187 @@ public class ApproveOfferCommandHandler : IRequestHandler<ApproveOfferCommand, O
             approval.ApprovedAt, approval.Notes);
     }
 }
+
+public record RescheduleInterviewCommand(
+    Guid InterviewId,
+    DateTime StartsAt,
+    int DurationMinutes,
+    InterviewType Type,
+    string? LocationOrLink
+) : IRequest<InterviewDto>;
+
+public class RescheduleInterviewCommandValidator : AbstractValidator<RescheduleInterviewCommand>
+{
+    public RescheduleInterviewCommandValidator()
+    {
+        RuleFor(x => x.InterviewId).NotEmpty();
+        RuleFor(x => x.DurationMinutes).GreaterThan(0).LessThanOrEqualTo(480);
+    }
+}
+
+public class RescheduleInterviewCommandHandler : IRequestHandler<RescheduleInterviewCommand, InterviewDto>
+{
+    private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
+    private readonly IPipelineNotifier _notifier;
+
+    public RescheduleInterviewCommandHandler(
+        IApplicationDbContext context,
+        ICurrentUserService currentUser,
+        IPipelineNotifier notifier)
+    {
+        _context = context;
+        _currentUser = currentUser;
+        _notifier = notifier;
+    }
+
+    public async Task<InterviewDto> Handle(RescheduleInterviewCommand request, CancellationToken cancellationToken)
+    {
+        var interview = await _context.Interviews
+            .Include(i => i.Application)
+                .ThenInclude(a => a.Job)
+            .Include(i => i.Application)
+                .ThenInclude(a => a.Candidate)
+            .Include(i => i.Participants)
+            .Include(i => i.Feedbacks)
+            .FirstOrDefaultAsync(i => i.Id == request.InterviewId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Interview), request.InterviewId);
+
+        if (interview.Status == InterviewStatus.Cancelled)
+        {
+            throw new ConflictException("Cannot reschedule an interview that has been cancelled.");
+        }
+
+        if (_currentUser.Role == Roles.HiringManager &&
+            interview.Application.Job.HiringManagerId != _currentUser.UserId &&
+            !interview.Participants.Any(p => p.InterviewerId == _currentUser.UserId))
+        {
+            throw new ForbiddenException("Hiring managers can only reschedule interviews assigned to them.");
+        }
+
+        var requestedEnd = request.StartsAt.AddMinutes(request.DurationMinutes);
+        var participantIds = interview.Participants.Select(p => p.InterviewerId).ToList();
+
+        foreach (var interviewerId in participantIds)
+        {
+            var hasOverlap = await _context.Interviews
+                .AsNoTracking()
+                .Where(i => i.Id != interview.Id && i.Status == InterviewStatus.Scheduled)
+                .Where(i => i.Participants.Any(p => p.InterviewerId == interviewerId))
+                .AnyAsync(i => request.StartsAt < i.StartsAt.AddMinutes(i.DurationMinutes) &&
+                               requestedEnd > i.StartsAt, cancellationToken);
+
+            if (hasOverlap)
+            {
+                throw new ConflictException($"Interviewer {interviewerId} is already booked for an overlapping interview.");
+            }
+        }
+
+        interview.StartsAt = request.StartsAt;
+        interview.DurationMinutes = request.DurationMinutes;
+        interview.Type = request.Type;
+        if (!string.IsNullOrWhiteSpace(request.LocationOrLink))
+        {
+            interview.LocationOrLink = request.LocationOrLink;
+        }
+        interview.Status = InterviewStatus.Scheduled;
+        interview.UpdatedAt = DateTime.UtcNow;
+
+        _context.OutboxMessages.Add(new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            Type = "CandidateInterviewRescheduled",
+            ToAddress = interview.Application.Candidate.Email,
+            Subject = $"Interview Rescheduled: {interview.Application.Job.Title}",
+            Body = $"Dear {interview.Application.Candidate.FullName},<br/><br/>Your interview for the {interview.Application.Job.Title} position has been rescheduled to {request.StartsAt:g} ({request.DurationMinutes} minutes).<br/>Type: {request.Type}<br/>Details: {interview.LocationOrLink ?? "Details will be sent shortly."}",
+            DedupeKey = $"candidate-interview-reschedule-{interview.Id}-{request.StartsAt.Ticks}",
+            Status = OutboxMessageStatus.Pending,
+            Attempts = 0,
+            NextAttemptAt = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var participantNames = interview.Participants.Select(p => p.InterviewerName).ToList();
+        var feedbacks = interview.Feedbacks.Select(f => new InterviewFeedbackDto(
+            f.Id, f.InterviewerId, f.InterviewerName,
+            f.Rating, f.Recommendation, f.Comments, f.SubmittedAt)).ToList();
+
+        var dto = new InterviewDto(
+            interview.Id, interview.ApplicationId, interview.StartsAt,
+            interview.DurationMinutes, interview.Type, interview.LocationOrLink,
+            interview.Status, participantNames, feedbacks);
+
+        await _notifier.NotifyInterviewScheduled(interview.Application.JobId, interview.ApplicationId, dto);
+        return dto;
+    }
+}
+
+public record CancelInterviewCommand(Guid InterviewId, string? Reason) : IRequest<Unit>;
+
+public class CancelInterviewCommandValidator : AbstractValidator<CancelInterviewCommand>
+{
+    public CancelInterviewCommandValidator()
+    {
+        RuleFor(x => x.InterviewId).NotEmpty();
+    }
+}
+
+public class CancelInterviewCommandHandler : IRequestHandler<CancelInterviewCommand, Unit>
+{
+    private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
+
+    public CancelInterviewCommandHandler(
+        IApplicationDbContext context,
+        ICurrentUserService currentUser)
+    {
+        _context = context;
+        _currentUser = currentUser;
+    }
+
+    public async Task<Unit> Handle(CancelInterviewCommand request, CancellationToken cancellationToken)
+    {
+        var interview = await _context.Interviews
+            .Include(i => i.Application)
+                .ThenInclude(a => a.Job)
+            .Include(i => i.Application)
+                .ThenInclude(a => a.Candidate)
+            .Include(i => i.Participants)
+            .FirstOrDefaultAsync(i => i.Id == request.InterviewId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Interview), request.InterviewId);
+
+        if (interview.Status == InterviewStatus.Cancelled)
+        {
+            throw new ConflictException("Interview is already cancelled.");
+        }
+
+        if (_currentUser.Role == Roles.HiringManager &&
+            interview.Application.Job.HiringManagerId != _currentUser.UserId &&
+            !interview.Participants.Any(p => p.InterviewerId == _currentUser.UserId))
+        {
+            throw new ForbiddenException("Hiring managers can only cancel interviews assigned to them.");
+        }
+
+        interview.Status = InterviewStatus.Cancelled;
+        interview.UpdatedAt = DateTime.UtcNow;
+
+        _context.OutboxMessages.Add(new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            Type = "CandidateInterviewCancelled",
+            ToAddress = interview.Application.Candidate.Email,
+            Subject = $"Interview Cancelled: {interview.Application.Job.Title}",
+            Body = $"Dear {interview.Application.Candidate.FullName},<br/><br/>Your interview for the {interview.Application.Job.Title} position scheduled for {interview.StartsAt:g} has been cancelled.<br/>Reason: {request.Reason ?? "Scheduling update."}",
+            DedupeKey = $"candidate-interview-cancelled-{interview.Id}",
+            Status = OutboxMessageStatus.Pending,
+            Attempts = 0,
+            NextAttemptAt = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return Unit.Value;
+    }
+}

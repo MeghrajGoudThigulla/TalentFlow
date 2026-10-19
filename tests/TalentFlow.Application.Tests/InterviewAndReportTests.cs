@@ -244,4 +244,112 @@ public class InterviewAndReportTests
         report.StageCounts["Applied"].Should().Be(1);
         report.StageCounts["Interview"].Should().Be(1);
     }
+
+    [Fact]
+    public async Task RescheduleInterview_UpdatesTime_AndQueuesOutboxMessage()
+    {
+        var job = new Job
+        {
+            Id = Guid.NewGuid(),
+            Title = "Backend Engineer",
+            Department = "Eng",
+            Location = "Remote",
+            Status = JobStatus.Open,
+            CreatedById = "recruiter-1"
+        };
+        _context.Jobs.Add(job);
+
+        var candidate = new Candidate { Id = Guid.NewGuid(), FullName = "Candidate Reschedule", Email = "reschedule@test.com" };
+        _context.Candidates.Add(candidate);
+
+        var stage = PipelineStage.Create("Interview", 2);
+        _context.PipelineStages.Add(stage);
+
+        var app = new DomainApplication { Id = Guid.NewGuid(), JobId = job.Id, CandidateId = candidate.Id, CurrentStageId = stage.Id };
+        _context.Applications.Add(app);
+
+        var interview = new Interview
+        {
+            Id = Guid.NewGuid(),
+            ApplicationId = app.Id,
+            StartsAt = DateTime.UtcNow.AddDays(1),
+            DurationMinutes = 45,
+            Type = InterviewType.Video,
+            Status = InterviewStatus.Scheduled
+        };
+        interview.Participants.Add(new InterviewParticipant { InterviewId = interview.Id, InterviewerId = "recruiter-1", InterviewerName = "Jane Recruiter" });
+        _context.Interviews.Add(interview);
+        await _context.SaveChangesAsync();
+
+        var handler = new RescheduleInterviewCommandHandler(_context, _currentUserMock.Object, _notifierMock.Object);
+        var newStartsAt = DateTime.UtcNow.AddDays(3);
+        var command = new RescheduleInterviewCommand(
+            InterviewId: interview.Id,
+            StartsAt: newStartsAt,
+            DurationMinutes: 60,
+            Type: InterviewType.Video,
+            LocationOrLink: "https://meet.google.com/new-link"
+        );
+
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result.DurationMinutes.Should().Be(60);
+        result.LocationOrLink.Should().Be("https://meet.google.com/new-link");
+
+        var dbInterview = await _context.Interviews.FindAsync(interview.Id);
+        dbInterview!.StartsAt.Should().Be(newStartsAt);
+
+        var outbox = await _context.OutboxMessages.FirstOrDefaultAsync(m => m.Type == "CandidateInterviewRescheduled");
+        outbox.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task CancelInterview_SetsStatusCancelled_AndQueuesOutboxMessage()
+    {
+        var job = new Job
+        {
+            Id = Guid.NewGuid(),
+            Title = "Backend Engineer",
+            Department = "Eng",
+            Location = "Remote",
+            Status = JobStatus.Open,
+            CreatedById = "recruiter-1"
+        };
+        _context.Jobs.Add(job);
+
+        var candidate = new Candidate { Id = Guid.NewGuid(), FullName = "Candidate Cancel", Email = "cancel@test.com" };
+        _context.Candidates.Add(candidate);
+
+        var stage = PipelineStage.Create("Interview", 2);
+        _context.PipelineStages.Add(stage);
+
+        var app = new DomainApplication { Id = Guid.NewGuid(), JobId = job.Id, CandidateId = candidate.Id, CurrentStageId = stage.Id };
+        _context.Applications.Add(app);
+
+        var interview = new Interview
+        {
+            Id = Guid.NewGuid(),
+            ApplicationId = app.Id,
+            StartsAt = DateTime.UtcNow.AddDays(1),
+            DurationMinutes = 45,
+            Type = InterviewType.Video,
+            Status = InterviewStatus.Scheduled
+        };
+        interview.Participants.Add(new InterviewParticipant { InterviewId = interview.Id, InterviewerId = "recruiter-1", InterviewerName = "Jane Recruiter" });
+        _context.Interviews.Add(interview);
+        await _context.SaveChangesAsync();
+
+        var handler = new CancelInterviewCommandHandler(_context, _currentUserMock.Object);
+        var command = new CancelInterviewCommand(interview.Id, "Candidate withdrew application.");
+
+        var unit = await handler.Handle(command, CancellationToken.None);
+        unit.Should().Be(MediatR.Unit.Value);
+
+        var dbInterview = await _context.Interviews.FindAsync(interview.Id);
+        dbInterview!.Status.Should().Be(InterviewStatus.Cancelled);
+
+        var outbox = await _context.OutboxMessages.FirstOrDefaultAsync(m => m.Type == "CandidateInterviewCancelled");
+        outbox.Should().NotBeNull();
+    }
 }

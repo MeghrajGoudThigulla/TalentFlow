@@ -40,6 +40,36 @@ public class InterviewsController : ApiControllerBase
         var result = await Mediator.Send(command, cancellationToken);
         return Ok(result);
     }
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Policy = "RequireHiringManagerOrAbove")]
+    public async Task<ActionResult<InterviewDto>> RescheduleInterview(
+        Guid id,
+        [FromBody] RescheduleInterviewRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new RescheduleInterviewCommand(
+            id,
+            request.StartsAt,
+            request.DurationMinutes,
+            request.Type,
+            request.LocationOrLink
+        );
+
+        var result = await Mediator.Send(command, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "RequireHiringManagerOrAbove")]
+    public async Task<IActionResult> CancelInterview(
+        Guid id,
+        [FromQuery] string? reason,
+        CancellationToken cancellationToken = default)
+    {
+        await Mediator.Send(new CancelInterviewCommand(id, reason), cancellationToken);
+        return NoContent();
+    }
 }
 
 public record ScheduleInterviewRequest(
@@ -48,6 +78,13 @@ public record ScheduleInterviewRequest(
     InterviewType Type,
     string? LocationOrLink,
     List<string> InterviewerIds
+);
+
+public record RescheduleInterviewRequest(
+    DateTime StartsAt,
+    int DurationMinutes,
+    InterviewType Type,
+    string? LocationOrLink
 );
 
 public record SubmitFeedbackRequest(
