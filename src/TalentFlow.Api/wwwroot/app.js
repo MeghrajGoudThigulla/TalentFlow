@@ -31,16 +31,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // --- Session & Authentication State Control ---
 function checkSessionState() {
-  const authView = document.getElementById('auth-view');
+  const landingView = document.getElementById('landing-view');
   const appWorkspace = document.getElementById('app-workspace');
+  const loginModal = document.getElementById('login-modal');
 
   if (state.user && state.token) {
-    authView.classList.add('hidden');
-    appWorkspace.classList.remove('hidden');
+    if (landingView) landingView.classList.add('hidden');
+    if (appWorkspace) appWorkspace.classList.remove('hidden');
+    if (loginModal) loginModal.classList.add('hidden');
     renderWorkspaceProfile();
   } else {
-    authView.classList.remove('hidden');
-    appWorkspace.classList.add('hidden');
+    if (landingView) landingView.classList.remove('hidden');
+    if (appWorkspace) appWorkspace.classList.add('hidden');
+    loadLandingPublicJobs();
+  }
+}
+
+// Modal opening/closing controls
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) modal.classList.remove('hidden');
+}
+
+function openLoginModal() {
+  openModal('login-modal');
+  document.getElementById('auth-error-banner')?.classList.add('hidden');
+  const emailInput = document.getElementById('login-email');
+  if (emailInput) emailInput.focus();
+}
+
+function handleLoginBackdropClick(e) {
+  if (e.target.id === 'login-modal') {
+    closeModal('login-modal');
   }
 }
 
@@ -64,17 +86,6 @@ function renderWorkspaceProfile() {
   const names = (state.user.fullName || state.user.email || 'TF').split(' ');
   const initials = names.length > 1 ? (names[0][0] + names[1][0]).toUpperCase() : names[0].substring(0, 2).toUpperCase();
   avatarInitials.textContent = initials;
-}
-
-// Quick fill credentials handler (helper if needed)
-function fillCredentials(email, password, roleName) {
-  const emailInput = document.getElementById('login-email');
-  const passwordInput = document.getElementById('login-password');
-  const rolePreview = document.getElementById('role-preview-tag');
-  if (emailInput) emailInput.value = email;
-  if (passwordInput) passwordInput.value = password;
-  if (rolePreview) rolePreview.textContent = `Role: ${roleName}`;
-  document.getElementById('auth-error-banner')?.classList.add('hidden');
 }
 
 // Toggle password text visibility
@@ -152,6 +163,7 @@ async function handleFormLogin(e) {
 
     // Set authenticated session
     setSession(data);
+    closeModal('login-modal');
     showToast(`Welcome back, ${data.fullName}! Signed in as ${data.role}.`, 'success');
 
     // Transition to main workspace
@@ -876,34 +888,73 @@ async function loadPublicCareers() {
   }
 }
 
-// Load public jobs inside the auth screen preview
-async function loadAuthPublicJobs() {
-  const container = document.getElementById('auth-public-jobs-list');
+// --- Landing Page Public Careers Integration ---
+let allLandingJobs = [];
+
+async function loadLandingPublicJobs() {
+  const container = document.getElementById('landing-public-jobs-list');
   if (!container) return;
-  container.innerHTML = '<p class="text-muted text-xs">Loading career positions...</p>';
+  container.innerHTML = '<p style="color: #94a3b8; font-size: 0.9rem; grid-column: 1 / -1; text-align: center; padding: 2rem;">Loading current openings...</p>';
 
   try {
     const res = await fetch('/api/public/jobs');
     if (res.ok) {
       const data = await res.json();
-      const items = data.items || [];
-      if (items.length === 0) {
-        container.innerHTML = '<p class="text-muted text-xs">No open positions right now.</p>';
-        return;
-      }
-
-      container.innerHTML = items.map(j => `
-        <div class="auth-job-item">
-          <h4>${escapeHtml(j.title)}</h4>
-          <span class="job-dept">${escapeHtml(j.department)} • ${escapeHtml(j.location)}</span>
-          ${j.salaryMin && j.salaryMax ? `<div class="job-salary">₹${(j.salaryMin/100000).toFixed(1)}L - ₹${(j.salaryMax/100000).toFixed(1)}L / yr</div>` : ''}
-          <button class="btn-action btn-primary btn-sm btn-full mt-2" onclick="openApplyModal('${j.id}', '${escapeHtml(j.title)}')">Apply with Resume</button>
-        </div>
-      `).join('');
+      allLandingJobs = data.items || [];
+      renderLandingJobs(allLandingJobs);
+    } else {
+      container.innerHTML = '<p style="color: #94a3b8; font-size: 0.9rem; grid-column: 1 / -1; text-align: center; padding: 2rem;">No open positions at this time. Please check back soon!</p>';
     }
   } catch (e) {
-    container.innerHTML = '<p class="text-danger text-xs">Could not fetch jobs.</p>';
+    container.innerHTML = '<p style="color: #94a3b8; font-size: 0.9rem; grid-column: 1 / -1; text-align: center; padding: 2rem;">Unable to load job openings.</p>';
   }
+}
+
+function filterLandingJobs() {
+  const query = (document.getElementById('landing-job-search')?.value || '').toLowerCase().trim();
+  const dept = (document.getElementById('landing-job-dept')?.value || '').trim();
+
+  const filtered = allLandingJobs.filter(j => {
+    const matchTitle = !query || j.title.toLowerCase().includes(query) || (j.description && j.description.toLowerCase().includes(query));
+    const matchDept = !dept || j.department === dept;
+    return matchTitle && matchDept;
+  });
+
+  renderLandingJobs(filtered);
+}
+
+function renderLandingJobs(jobs) {
+  const container = document.getElementById('landing-public-jobs-list');
+  if (!container) return;
+
+  if (jobs.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1.5rem; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
+        <p style="color: #94a3b8; font-size: 0.95rem;">No open positions match your search criteria.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = jobs.map(j => `
+    <div class="landing-job-card">
+      <div>
+        <h4 class="landing-job-title">${escapeHtml(j.title)}</h4>
+        <div class="landing-job-badges">
+          <span class="landing-job-badge">${escapeHtml(j.department || 'Engineering')}</span>
+          <span class="landing-job-badge">${escapeHtml(j.location || 'Remote')}</span>
+          <span class="landing-job-badge">${escapeHtml(j.employmentType || 'Full-time')}</span>
+          ${j.openings ? `<span class="landing-job-badge">${j.openings} Openings</span>` : ''}
+          ${j.salaryMin && j.salaryMax ? `<span class="landing-job-badge" style="color: #34d399;">₹${(j.salaryMin/100000).toFixed(1)}L - ₹${(j.salaryMax/100000).toFixed(1)}L</span>` : ''}
+        </div>
+        <p style="font-size: 0.825rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.25rem;">
+          ${escapeHtml(j.description ? (j.description.length > 130 ? j.description.substring(0, 130) + '...' : j.description) : 'Join our high-impact engineering team to build scalable recruitment workflows.')}
+        </p>
+      </div>
+      <button type="button" class="btn-apply-job" onclick="openApplyModal('${j.id}', '${escapeHtml(j.title)}')">
+        Apply with Resume →
+      </button>
+    </div>
+  `).join('');
 }
 
 // --- Candidate Public Apply Modal ---
@@ -1074,6 +1125,16 @@ function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.add('hidden');
 }
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeModal('login-modal');
+    closeModal('apply-modal');
+    closeModal('application-modal');
+    closeModal('job-create-modal');
+    closeModal('schedule-interview-modal');
+  }
+});
 
 function showToast(message, type = 'info') {
   const toast = document.getElementById('toast');
