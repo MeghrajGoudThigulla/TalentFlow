@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F6EFEC6A-2C71-4F68-B262-898271DDD122}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalentFlow.Domain", "src\TalentFlow.Domain\TalentFlow.Domain.csproj", "{C0822E1A-E709-4405-936A-C43E70EF2263}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalentFlow.Application", "src\TalentFlow.Application\TalentFlow.Application.csproj", "{FF6926CA-FE09-4861-8C68-7D5DB5651A4D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalentFlow.Infrastructure", "src\TalentFlow.Infrastructure\TalentFlow.Infrastructure.csproj", "{E326D8CF-48E3-4003-8541-DA0000FA7F08}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalentFlow.Api", "src\TalentFlow.Api\TalentFlow.Api.csproj", "{70F9D045-9EE0-4998-88FE-343F04C6D968}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5471DBF7-185D-4446-BB3E-D1A8B462ADE8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalentFlow.Domain.Tests", "tests\TalentFlow.Domain.Tests\TalentFlow.Domain.Tests.csproj", "{618B5617-08FB-40FE-AF89-D726AF51D013}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalentFlow.Application.Tests", "tests\TalentFlow.Application.Tests\TalentFlow.Application.Tests.csproj", "{1A6DA811-4CD2-4127-8C37-D62C0386F4EE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C0822E1A-E709-4405-936A-C43E70EF2263}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0822E1A-E709-4405-936A-C43E70EF2263}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0822E1A-E709-4405-936A-C43E70EF2263}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0822E1A-E709-4405-936A-C43E70EF2263}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF6926CA-FE09-4861-8C68-7D5DB5651A4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF6926CA-FE09-4861-8C68-7D5DB5651A4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF6926CA-FE09-4861-8C68-7D5DB5651A4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF6926CA-FE09-4861-8C68-7D5DB5651A4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E326D8CF-48E3-4003-8541-DA0000FA7F08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E326D8CF-48E3-4003-8541-DA0000FA7F08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E326D8CF-48E3-4003-8541-DA0000FA7F08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E326D8CF-48E3-4003-8541-DA0000FA7F08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70F9D045-9EE0-4998-88FE-343F04C6D968}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70F9D045-9EE0-4998-88FE-343F04C6D968}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70F9D045-9EE0-4998-88FE-343F04C6D968}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70F9D045-9EE0-4998-88FE-343F04C6D968}.Release|Any CPU.Build.0 = Release|Any CPU
+		{618B5617-08FB-40FE-AF89-D726AF51D013}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{618B5617-08FB-40FE-AF89-D726AF51D013}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{618B5617-08FB-40FE-AF89-D726AF51D013}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{618B5617-08FB-40FE-AF89-D726AF51D013}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A6DA811-4CD2-4127-8C37-D62C0386F4EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A6DA811-4CD2-4127-8C37-D62C0386F4EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A6DA811-4CD2-4127-8C37-D62C0386F4EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A6DA811-4CD2-4127-8C37-D62C0386F4EE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C0822E1A-E709-4405-936A-C43E70EF2263} = {F6EFEC6A-2C71-4F68-B262-898271DDD122}
+		{FF6926CA-FE09-4861-8C68-7D5DB5651A4D} = {F6EFEC6A-2C71-4F68-B262-898271DDD122}
+		{E326D8CF-48E3-4003-8541-DA0000FA7F08} = {F6EFEC6A-2C71-4F68-B262-898271DDD122}
+		{70F9D045-9EE0-4998-88FE-343F04C6D968} = {F6EFEC6A-2C71-4F68-B262-898271DDD122}
+		{618B5617-08FB-40FE-AF89-D726AF51D013} = {5471DBF7-185D-4446-BB3E-D1A8B462ADE8}
+		{1A6DA811-4CD2-4127-8C37-D62C0386F4EE} = {5471DBF7-185D-4446-BB3E-D1A8B462ADE8}
+	EndGlobalSection
+EndGlobal

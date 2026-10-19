@@ -1,0 +1,19 @@
+services:
+  talentflow-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: talentflow-api
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+    volumes:
+      - talentflow-resumes:/app/uploads/resumes
+      - talentflow-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  talentflow-resumes:
+  talentflow-data:

@@ -1,0 +1,28 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+*.dll
+*.pdb
+
+# Local Database & uploads
+*.db
+*.db-shm
+*.db-wal
+uploads/resumes/*
+!uploads/resumes/.gitkeep
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio / VS Code
+.vscode/
+.vs/
+*.ide/
+
+# OS generated
+.DS_Store
+Thumbs.db
