@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalentFlow.Domain.Tests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalentFlow.Application.Tests", "tests\TalentFlow.Application.Tests\TalentFlow.Application.Tests.csproj", "{1A6DA811-4CD2-4127-8C37-D62C0386F4EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalentFlow.Api.IntegrationTests", "tests\TalentFlow.Api.IntegrationTests\TalentFlow.Api.IntegrationTests.csproj", "{CB2B8B18-06D3-4E09-A849-1BAB4A47BF6C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +54,10 @@ Global
 		{1A6DA811-4CD2-4127-8C37-D62C0386F4EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A6DA811-4CD2-4127-8C37-D62C0386F4EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A6DA811-4CD2-4127-8C37-D62C0386F4EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB2B8B18-06D3-4E09-A849-1BAB4A47BF6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB2B8B18-06D3-4E09-A849-1BAB4A47BF6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB2B8B18-06D3-4E09-A849-1BAB4A47BF6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB2B8B18-06D3-4E09-A849-1BAB4A47BF6C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C0822E1A-E709-4405-936A-C43E70EF2263} = {F6EFEC6A-2C71-4F68-B262-898271DDD122}
@@ -60,5 +66,6 @@ Global
 		{70F9D045-9EE0-4998-88FE-343F04C6D968} = {F6EFEC6A-2C71-4F68-B262-898271DDD122}
 		{618B5617-08FB-40FE-AF89-D726AF51D013} = {5471DBF7-185D-4446-BB3E-D1A8B462ADE8}
 		{1A6DA811-4CD2-4127-8C37-D62C0386F4EE} = {5471DBF7-185D-4446-BB3E-D1A8B462ADE8}
+		{CB2B8B18-06D3-4E09-A849-1BAB4A47BF6C} = {5471DBF7-185D-4446-BB3E-D1A8B462ADE8}
 	EndGlobalSection
 EndGlobal

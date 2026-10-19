@@ -1,13 +1,49 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using TalentFlow.Application.Common.Interfaces;
+using TalentFlow.Domain.Enums;
 
 namespace TalentFlow.Infrastructure.RealTime;
 
+[Authorize]
 public class PipelineHub : Hub
 {
+    private readonly IApplicationDbContext _context;
+
+    public PipelineHub(IApplicationDbContext context)
+    {
+        _context = context;
+    }
+
     public async Task JoinJobBoard(string jobId)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, $"job-{jobId}");
+        var user = Context.User;
+        var role = user?.FindFirst(ClaimTypes.Role)?.Value;
+        var userId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? user?.FindFirst("sub")?.Value;
+
+        if (role == Roles.Admin || role == Roles.Recruiter)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"job-{jobId}");
+            return;
+        }
+
+        if (role == Roles.HiringManager && Guid.TryParse(jobId, out var parsedJobId))
+        {
+            var job = await _context.Jobs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(j => j.Id == parsedJobId && !j.IsDeleted);
+
+            if (job != null && job.HiringManagerId == userId)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"job-{jobId}");
+                return;
+            }
+        }
+
+        throw new HubException("Forbidden: You do not have permission to join this job board.");
     }
 
     public async Task LeaveJobBoard(string jobId)
