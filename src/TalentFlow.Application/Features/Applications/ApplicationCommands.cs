@@ -407,8 +407,15 @@ public class AddNoteCommandHandler : IRequestHandler<AddNoteCommand, NoteDto>
 
     public async Task<NoteDto> Handle(AddNoteCommand request, CancellationToken cancellationToken)
     {
-        var app = await _context.Applications.FirstOrDefaultAsync(a => a.Id == request.ApplicationId, cancellationToken)
+        var app = await _context.Applications
+            .Include(a => a.Job)
+            .FirstOrDefaultAsync(a => a.Id == request.ApplicationId, cancellationToken)
             ?? throw new NotFoundException(nameof(DomainApplication), request.ApplicationId);
+
+        if (_currentUser.Role == Roles.HiringManager && app.Job.HiringManagerId != _currentUser.UserId)
+        {
+            throw new ForbiddenException("Hiring managers can only add notes to applications for assigned jobs.");
+        }
 
         var note = new Note
         {
@@ -435,10 +442,12 @@ public record GetOfferLetterQuery(Guid ApplicationId) : IRequest<OfferLetterDto>
 public class GetOfferLetterQueryHandler : IRequestHandler<GetOfferLetterQuery, OfferLetterDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetOfferLetterQueryHandler(IApplicationDbContext context)
+    public GetOfferLetterQueryHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<OfferLetterDto> Handle(GetOfferLetterQuery request, CancellationToken cancellationToken)
@@ -449,6 +458,11 @@ public class GetOfferLetterQueryHandler : IRequestHandler<GetOfferLetterQuery, O
             .Include(a => a.OfferApproval)
             .FirstOrDefaultAsync(a => a.Id == request.ApplicationId, cancellationToken)
             ?? throw new NotFoundException(nameof(DomainApplication), request.ApplicationId);
+
+        if (_currentUser.Role == Roles.HiringManager && app.Job.HiringManagerId != _currentUser.UserId)
+        {
+            throw new ForbiddenException("Hiring managers can only view offer letters for assigned jobs.");
+        }
 
         if (app.OfferApproval == null)
         {
@@ -465,12 +479,19 @@ public class GetOfferLetterQueryHandler : IRequestHandler<GetOfferLetterQuery, O
         var joiningDate = app.OfferApproval.ApprovedAt.AddDays(14);
         var approvedBy = app.OfferApproval.ApprovedByName;
 
+        var encodedCandidateName = System.Net.WebUtility.HtmlEncode(app.Candidate.FullName);
+        var encodedJobTitle = System.Net.WebUtility.HtmlEncode(app.Job.Title);
+        var encodedDepartment = System.Net.WebUtility.HtmlEncode(app.Job.Department);
+        var encodedLocation = System.Net.WebUtility.HtmlEncode(app.Job.Location);
+        var encodedEmploymentType = System.Net.WebUtility.HtmlEncode(app.Job.EmploymentType);
+        var encodedApprovedBy = System.Net.WebUtility.HtmlEncode(approvedBy);
+
         var htmlDocument = $@"
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset='utf-8'/>
-  <title>Employment Offer Letter - {app.Candidate.FullName}</title>
+  <title>Employment Offer Letter - {encodedCandidateName}</title>
   <style>
     body {{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; line-height: 1.6; max-width: 800px; margin: 0 auto; }}
     .header {{ border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }}
@@ -502,18 +523,18 @@ public class GetOfferLetterQueryHandler : IRequestHandler<GetOfferLetterQuery, O
 
   <div class='title'>Confidential Employment Offer</div>
 
-  <p>Dear <strong>{app.Candidate.FullName}</strong>,</p>
-  <p>On behalf of <strong>TalentFlow</strong>, we are delighted to offer you the full-time position of <strong>{app.Job.Title}</strong> in our <strong>{app.Job.Department}</strong> department.</p>
+  <p>Dear <strong>{encodedCandidateName}</strong>,</p>
+  <p>On behalf of <strong>TalentFlow</strong>, we are delighted to offer you the full-time position of <strong>{encodedJobTitle}</strong> in our <strong>{encodedDepartment}</strong> department.</p>
 
   <div class='section'>
     <div class='section-title'>1. Position Details</div>
     <ul>
-      <li><strong>Position Title:</strong> {app.Job.Title}</li>
-      <li><strong>Department:</strong> {app.Job.Department}</li>
-      <li><strong>Work Location:</strong> {app.Job.Location}</li>
-      <li><strong>Employment Type:</strong> {app.Job.EmploymentType}</li>
+      <li><strong>Position Title:</strong> {encodedJobTitle}</li>
+      <li><strong>Department:</strong> {encodedDepartment}</li>
+      <li><strong>Work Location:</strong> {encodedLocation}</li>
+      <li><strong>Employment Type:</strong> {encodedEmploymentType}</li>
       <li><strong>Anticipated Joining Date:</strong> {joiningDate:MMMM dd, yyyy}</li>
-      <li><strong>Reporting Manager:</strong> {approvedBy}</li>
+      <li><strong>Reporting Manager:</strong> {encodedApprovedBy}</li>
     </ul>
   </div>
 
@@ -563,12 +584,12 @@ public class GetOfferLetterQueryHandler : IRequestHandler<GetOfferLetterQuery, O
   <div class='signatures'>
     <div class='signature-block'>
       <strong>Authorized Signatory</strong><br/>
-      {approvedBy}<br/>
+      {encodedApprovedBy}<br/>
       TalentFlow Hiring Authority
     </div>
     <div class='signature-block'>
       <strong>Candidate Acceptance</strong><br/>
-      {app.Candidate.FullName}<br/>
+      {encodedCandidateName}<br/>
       Signature & Date: ___________________
     </div>
   </div>
