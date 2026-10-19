@@ -6,6 +6,7 @@ using TalentFlow.Application.Common.Interfaces;
 using TalentFlow.Application.Common.Models;
 using TalentFlow.Domain.Entities;
 using TalentFlow.Domain.Enums;
+using TalentFlow.Domain.Rules;
 using DomainApplication = TalentFlow.Domain.Entities.Application;
 
 namespace TalentFlow.Application.Features.Public;
@@ -202,6 +203,14 @@ public class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand, Guid>
             .FirstOrDefaultAsync(s => s.Name == "Applied", cancellationToken)
             ?? await _context.PipelineStages.OrderBy(s => s.Order).FirstAsync(cancellationToken);
 
+        // Calculate Resume Match Score against job requirements (inspired by IYOV AI scoring engine)
+        var matchResult = ResumeScoreCalculator.CalculateScore(
+            job.Title,
+            job.Description,
+            request.CoverNote,
+            request.ResumeFileName
+        );
+
         // 6. Create Application
         var application = new DomainApplication
         {
@@ -212,6 +221,8 @@ public class ApplyToJobCommandHandler : IRequestHandler<ApplyToJobCommand, Guid>
             ResumePath = storedPath,
             ResumeOriginalFileName = originalFileName,
             CoverNote = request.CoverNote,
+            MatchScore = matchResult.Score,
+            MatchedSkills = matchResult.MatchedSkillsSummary,
             AppliedAt = DateTime.UtcNow,
             RowVersion = Guid.NewGuid().ToByteArray()
         };

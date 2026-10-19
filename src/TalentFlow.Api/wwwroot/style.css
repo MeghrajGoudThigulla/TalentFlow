@@ -178,6 +178,17 @@ body { font-family: var(--font); background: var(--bg-main); color: var(--text-m
 .badge-success { background: #dcfce7; color: #15803d; }
 .badge-warning { background: #fef3c7; color: #b45309; }
 .badge-info { background: #e0f2fe; color: #0369a1; }
+.badge-score-high { background: #dcfce7; color: #15803d; font-weight: 700; border: 1px solid #86efac; }
+.badge-score-mid { background: #e0f2fe; color: #0369a1; font-weight: 700; border: 1px solid #7dd3fc; }
+.badge-score-low { background: #fef3c7; color: #b45309; font-weight: 700; border: 1px solid #fde68a; }
+
+.match-meter-container { margin-top: 0.5rem; background: #e2e8f0; border-radius: 9999px; height: 10px; overflow: hidden; width: 100%; }
+.match-meter-bar { height: 100%; border-radius: 9999px; transition: width 0.3s ease; }
+.match-meter-high { background: #10b981; }
+.match-meter-mid { background: #3b82f6; }
+.match-meter-low { background: #f59e0b; }
+.matched-skills-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.skill-tag { background: #f1f5f9; border: 1px solid #cbd5e1; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 500; color: #334155; }
 
 /* Buttons */
 .btn {

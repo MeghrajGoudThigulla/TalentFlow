@@ -244,6 +244,8 @@ public class ApplicationDbContextInitialiser
                 CandidateId = c1.Id,
                 CurrentStageId = interviewStage.Id,
                 CoverNote = "Passionate full-stack & backend developer with extensive experience in enterprise systems and real-time architectures.",
+                MatchScore = 95,
+                MatchedSkills = "C#, .NET, ASP.NET Core, Clean Architecture, CQRS, SignalR, SQL Server",
                 AppliedAt = DateTime.UtcNow.AddDays(-5),
                 RowVersion = Guid.NewGuid().ToByteArray()
             };
@@ -255,6 +257,8 @@ public class ApplicationDbContextInitialiser
                 CandidateId = c2.Id,
                 CurrentStageId = screeningStage.Id,
                 CoverNote = "Strong hands-on background in relational databases, ORMs, and distributed services.",
+                MatchScore = 86,
+                MatchedSkills = "C#, .NET, SQL Server, Entity Framework, REST, API",
                 AppliedAt = DateTime.UtcNow.AddDays(-4),
                 RowVersion = Guid.NewGuid().ToByteArray()
             };
@@ -266,6 +270,8 @@ public class ApplicationDbContextInitialiser
                 CandidateId = c3.Id,
                 CurrentStageId = appliedStage.Id,
                 CoverNote = "Excited about modern .NET 8 architecture and high-scale ATS systems.",
+                MatchScore = 78,
+                MatchedSkills = "C#, .NET, Docker, Testing",
                 AppliedAt = DateTime.UtcNow.AddDays(-2),
                 RowVersion = Guid.NewGuid().ToByteArray()
             };

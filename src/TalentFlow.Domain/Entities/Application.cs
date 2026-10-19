@@ -18,6 +18,10 @@ public class Application : BaseEntity
     public string? CoverNote { get; set; }
     public DateTime AppliedAt { get; set; } = DateTime.UtcNow;
 
+    // Resume Match Score (0 - 100) and extracted skills (inspired by IYOV AI scoring engine)
+    public int MatchScore { get; set; } = 0;
+    public string? MatchedSkills { get; set; }
+
     // Concurrency token for optimistic locking on board card moves
     public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 

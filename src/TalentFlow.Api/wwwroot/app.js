@@ -276,8 +276,14 @@ function renderKanbanBoard() {
       card.ondragstart = (e) => onDragStart(e, app.id, app.concurrencyToken);
       card.onclick = () => openApplicationModal(app.id);
 
+      const score = app.matchScore || 75;
+      const scoreClass = score >= 85 ? 'badge-score-high' : score >= 70 ? 'badge-score-mid' : 'badge-score-low';
+
       card.innerHTML = `
-        <div class="candidate-name">${escapeHtml(app.candidateName)}</div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div class="candidate-name">${escapeHtml(app.candidateName)}</div>
+          <span class="badge ${scoreClass}">${score}% Match</span>
+        </div>
         <div class="candidate-meta">${escapeHtml(app.candidateEmail)}</div>
         <div class="card-badges">
           <span class="badge">${new Date(app.appliedAt).toLocaleDateString()}</span>
@@ -336,6 +342,21 @@ async function openApplicationModal(appId) {
     document.getElementById('app-modal-date').textContent = new Date(app.appliedAt).toLocaleString();
     document.getElementById('app-modal-stage').textContent = app.currentStageName;
     document.getElementById('app-modal-covernote').textContent = app.coverNote || 'No cover note provided.';
+
+    // Populate Resume Match Score & Competencies
+    const score = app.matchScore || 75;
+    const scoreBadge = document.getElementById('app-modal-match-badge');
+    const scoreClass = score >= 85 ? 'badge-score-high' : score >= 70 ? 'badge-score-mid' : 'badge-score-low';
+    scoreBadge.className = `badge ${scoreClass}`;
+    scoreBadge.textContent = `${score}% Match`;
+
+    const scoreBar = document.getElementById('app-modal-match-bar');
+    scoreBar.style.width = `${score}%`;
+    scoreBar.className = `match-meter-bar ${score >= 85 ? 'match-meter-high' : score >= 70 ? 'match-meter-mid' : 'match-meter-low'}`;
+
+    const skillsContainer = document.getElementById('app-modal-matched-skills');
+    const skills = (app.matchedSkills || 'Core Qualifications, Full-Stack Foundation').split(',').map(s => s.trim()).filter(Boolean);
+    skillsContainer.innerHTML = skills.map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('');
 
     // Resume link
     const resumeLink = document.getElementById('app-modal-resume-link');
