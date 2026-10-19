@@ -3,249 +3,556 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TalentFlow ATS - Enterprise Recruitment Platform</title>
+  <title>TalentFlow ATS - Enterprise Recruitment & Pipeline Platform</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- SignalR client -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 </head>
-<body>
-  <!-- Navigation Header -->
-  <header class="navbar">
-    <div class="nav-brand">
-      <div class="brand-logo">TF</div>
-      <div class="brand-text">
-        <span class="brand-name">TalentFlow</span>
-        <span class="brand-tag">Enterprise ATS</span>
-      </div>
-    </div>
+<body class="theme-slate">
 
-    <!-- View Mode Switcher -->
-    <div class="nav-tabs">
-      <button class="nav-tab active" id="tab-kanban" onclick="switchTab('kanban')">Recruiter Pipeline</button>
-      <button class="nav-tab" id="tab-jobs" onclick="switchTab('jobs')">Manage Jobs</button>
-      <button class="nav-tab" id="tab-careers" onclick="switchTab('careers')">Public Careers</button>
-      <button class="nav-tab" id="tab-reports" onclick="switchTab('reports')">Reports & Audit</button>
-    </div>
-
-    <!-- User / Auth Profile -->
-    <div class="nav-auth" id="auth-section">
-      <div id="logged-out-view">
-        <span class="demo-label">Demo Login:</span>
-        <button class="btn btn-sm btn-outline" onclick="demoLogin('admin@talentflow.local', 'Admin@123456')">Admin</button>
-        <button class="btn btn-sm btn-primary" onclick="demoLogin('recruiter@talentflow.local', 'Recruiter@123456')">Recruiter</button>
-        <button class="btn btn-sm btn-outline" onclick="demoLogin('hiringmanager@talentflow.local', 'Manager@123456')">Hiring Manager</button>
-      </div>
-      <div id="logged-in-view" class="hidden">
-        <div class="user-info">
-          <span class="user-name" id="user-display-name"></span>
-          <span class="user-role-badge" id="user-display-role"></span>
-        </div>
-        <button class="btn btn-sm btn-ghost" onclick="logout()">Logout</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Live Connection Indicator -->
-  <div class="connection-bar" id="connection-bar">
-    <span class="status-indicator"></span>
-    <span id="connection-text">Connecting to real-time pipeline...</span>
-  </div>
-
-  <!-- MAIN CONTENT CONTAINER -->
-  <main class="main-container">
+  <!-- ======================================================== -->
+  <!-- 1. SPLIT-SCREEN AUTHENTICATION VIEW (IYOV AI INSPIRED)   -->
+  <!-- ======================================================== -->
+  <div id="auth-view" class="auth-layout">
     
-    <!-- SECTION 1: KANBAN BOARD -->
-    <section id="section-kanban" class="view-section">
-      <div class="section-toolbar">
-        <div class="toolbar-left">
-          <label for="job-selector"><strong>Active Job Pipeline:</strong></label>
-          <select id="job-selector" onchange="onJobSelected()">
-            <option value="">Loading jobs...</option>
-          </select>
-          <span id="job-info-badge" class="badge"></span>
+    <!-- Left Panel: Brand Showcase & Value Proposition -->
+    <div class="auth-left-panel">
+      <!-- Ambient Radial Glowing Orbs -->
+      <div class="ambient-glow orb-1"></div>
+      <div class="ambient-glow orb-2"></div>
+      <div class="ambient-glow orb-3"></div>
+      <div class="dot-grid-overlay"></div>
+
+      <div class="auth-left-content">
+        <!-- Brand Header -->
+        <div class="auth-brand-badge">
+          <div class="brand-symbol">TF</div>
+          <div class="brand-titles">
+            <span class="brand-main">TalentFlow</span>
+            <span class="brand-sub">Enterprise Recruitment Platform</span>
+          </div>
         </div>
-        <div class="toolbar-right">
-          <button class="btn btn-secondary btn-sm" onclick="reloadBoard()">Refresh Board</button>
-          <button class="btn btn-primary btn-sm" onclick="openCreateJobModal()">+ Post New Job</button>
+
+        <!-- Hero Title & Value Proposition -->
+        <div class="auth-hero-block">
+          <div class="badge-pill">
+            <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            <span>POWERED BY .NET 8 & CQRS</span>
+          </div>
+          <h1 class="hero-headline">
+            Hire the best<br>
+            <span class="gradient-text">10× faster.</span>
+          </h1>
+          <p class="hero-description">
+            India's smartest enterprise ATS for modern engineering teams. Automated resume match scoring, visual Kanban pipelines with concurrency tokens, real-time SignalR sync, and statutory CTC offer generation.
+          </p>
         </div>
-      </div>
 
-      <!-- Kanban Columns Container -->
-      <div class="kanban-board" id="kanban-columns">
-        <!-- Stages injected dynamically -->
-      </div>
-    </section>
-
-    <!-- SECTION 2: JOB MANAGEMENT -->
-    <section id="section-jobs" class="view-section hidden">
-      <div class="section-header">
-        <h2>Job Openings Management</h2>
-        <button class="btn btn-primary" onclick="openCreateJobModal()">+ Create New Job</button>
-      </div>
-      <div class="jobs-table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Department</th>
-              <th>Location</th>
-              <th>Status</th>
-              <th>Openings</th>
-              <th>Applications</th>
-              <th>Created</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="jobs-table-body">
-            <!-- Dynamic -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- SECTION 3: PUBLIC CAREERS PORTAL -->
-    <section id="section-careers" class="view-section hidden">
-      <div class="careers-hero">
-        <h1>Join Our World-Class Engineering Team</h1>
-        <p>Explore current career opportunities and submit your application with instant confirmation.</p>
-      </div>
-      <div class="career-cards-grid" id="public-jobs-list">
-        <!-- Dynamic -->
-      </div>
-    </section>
-
-    <!-- SECTION 4: REPORTS & AUDIT -->
-    <section id="section-reports" class="view-section hidden">
-      <div class="section-header">
-        <h2>Recruitment Analytics & Audit Trail</h2>
-      </div>
-      <div class="reports-grid">
-        <div class="report-card">
-          <h3>Pipeline Funnel</h3>
-          <div id="pipeline-funnel-content">Select a job to view funnel metrics.</div>
-        </div>
-        <div class="report-card">
-          <h3>Average Time to Hire (Days)</h3>
-          <div id="time-to-hire-content">Loading...</div>
-        </div>
-      </div>
-
-      <div class="audit-section">
-        <h3>System Audit Log (Last 30 Events)</h3>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Actor</th>
-              <th>Entity</th>
-              <th>Action</th>
-              <th>Change Summary</th>
-            </tr>
-          </thead>
-          <tbody id="audit-table-body">
-            <!-- Dynamic -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- MODALS -->
-
-  <!-- Candidate Application Detail Modal -->
-  <div class="modal-backdrop hidden" id="application-modal">
-    <div class="modal-content modal-lg">
-      <div class="modal-header">
-        <div>
-          <h3 id="app-modal-candidate-name">Candidate Name</h3>
-          <span class="text-muted" id="app-modal-job-title">Job Title</span>
-        </div>
-        <button class="modal-close" onclick="closeModal('application-modal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-split">
-          <!-- Left Col: Details -->
-          <div class="modal-col-left">
-            <div class="info-block">
-              <strong>Email:</strong> <span id="app-modal-email"></span><br>
-              <strong>Phone:</strong> <span id="app-modal-phone"></span><br>
-              <strong>Applied At:</strong> <span id="app-modal-date"></span><br>
-              <strong>Current Stage:</strong> <span id="app-modal-stage" class="badge"></span>
+        <!-- 4 Enterprise Feature Cards (2x2 Grid) -->
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon-wrapper icon-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
             </div>
-
-            <div class="info-block" id="app-modal-score-box">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong>Resume Match Score:</strong>
-                <span id="app-modal-match-badge" class="badge"></span>
-              </div>
-              <div class="match-meter-container">
-                <div id="app-modal-match-bar" class="match-meter-bar"></div>
-              </div>
-              <div style="font-size: 0.75rem; color: #64748b; margin-top: 6px;">Matched Competencies:</div>
-              <div id="app-modal-matched-skills" class="matched-skills-tags"></div>
-            </div>
-
-            <div class="info-block">
-              <strong>Cover Note:</strong>
-              <p id="app-modal-covernote" class="cover-note-box"></p>
-            </div>
-
-            <div class="info-block">
-              <strong>Resume:</strong>
-              <div id="app-modal-resume-container">
-                <a id="app-modal-resume-link" class="btn btn-outline btn-sm" target="_blank">Download Resume</a>
-              </div>
-            </div>
-
-            <div class="info-block stage-move-card">
-              <h4>Move Candidate Stage</h4>
-              <div class="form-row">
-                <select id="app-modal-target-stage"></select>
-                <button class="btn btn-primary btn-sm" onclick="submitStageMove()">Move Stage</button>
-              </div>
-              <input type="text" id="app-modal-move-reason" placeholder="Reason (e.g. Cleared technical evaluation)" class="form-control mt-1">
-              <label class="form-check mt-1">
-                <input type="checkbox" id="app-modal-allow-skip"> Admin skip validation
-              </label>
-            </div>
-
-            <div class="info-block" id="app-modal-offer-box">
-              <h4>Offer Approval</h4>
-              <div id="offer-status-content"></div>
+            <div class="feature-text">
+              <h4>Visual Pipeline</h4>
+              <p>Drag-and-drop state machine with optimistic concurrency control.</p>
             </div>
           </div>
 
-          <!-- Right Col: Timeline & Notes & Interviews -->
-          <div class="modal-col-right">
-            <div class="tab-pills">
-              <button class="tab-pill active" onclick="switchDetailTab('notes')">Internal Notes</button>
-              <button class="tab-pill" onclick="switchDetailTab('interviews')">Interviews</button>
-              <button class="tab-pill" onclick="switchDetailTab('history')">Stage History</button>
+          <div class="feature-card">
+            <div class="feature-icon-wrapper icon-violet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              </svg>
+            </div>
+            <div class="feature-text">
+              <h4>Resume Match Score</h4>
+              <p>Automated competency scoring (0–100%) against job technical requirements.</p>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper icon-emerald">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+            </div>
+            <div class="feature-text">
+              <h4>Real-Time SignalR</h4>
+              <p>Zero-latency updates broadcasted live across all active recruiter sessions.</p>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon-wrapper icon-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <div class="feature-text">
+              <h4>Indian CTC Offers</h4>
+              <p>Compliant statutory breakdowns with Basic, HRA, PF & Gratuity schedules.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-left-footer">
+          <span>© 2026 TalentFlow ATS • Clean Architecture & CQRS</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Interactive Sign In Form -->
+    <div class="auth-right-panel">
+      <div class="auth-card">
+        
+        <!-- Portal Toggle -->
+        <div class="portal-toggle-bar">
+          <button type="button" class="portal-toggle-btn active" id="btn-toggle-staff" onclick="switchAuthPortal('staff')">
+            <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+            <span>Recruitment Staff</span>
+          </button>
+          <button type="button" class="portal-toggle-btn" id="btn-toggle-careers" onclick="switchAuthPortal('careers')">
+            <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span>Candidate Careers</span>
+          </button>
+        </div>
+
+        <!-- STAFF SIGN IN SECTION -->
+        <div id="auth-staff-section">
+          <div class="auth-header-text">
+            <h2>Enterprise Sign In</h2>
+            <p>Access your hiring pipeline, candidate scoring, and offer workflows.</p>
+          </div>
+
+          <!-- Quick Fill Demo Selector Chips -->
+          <div class="demo-fill-container">
+            <div class="demo-fill-title">1-Click Quick Fill Credentials:</div>
+            <div class="demo-chips">
+              <button type="button" class="demo-chip chip-recruiter active" onclick="fillCredentials('recruiter@talentflow.local', 'Recruiter@123456', 'Recruiter')">
+                <span class="chip-dot"></span>
+                <span>Recruiter</span>
+              </button>
+              <button type="button" class="demo-chip chip-hm" onclick="fillCredentials('hiringmanager@talentflow.local', 'Manager@123456', 'Hiring Manager')">
+                <span class="chip-dot"></span>
+                <span>Hiring Mgr</span>
+              </button>
+              <button type="button" class="demo-chip chip-admin" onclick="fillCredentials('admin@talentflow.local', 'Admin@123456', 'Admin')">
+                <span class="chip-dot"></span>
+                <span>Admin</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Error Alert Banner -->
+          <div id="auth-error-banner" class="auth-alert hidden">
+            <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span id="auth-error-text">Invalid email or password</span>
+          </div>
+
+          <!-- Login Form -->
+          <form id="login-form" onsubmit="handleFormLogin(event)" class="auth-form">
+            <div class="form-field">
+              <label for="login-email">Work Email</label>
+              <div class="input-container">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <input type="email" id="login-email" value="recruiter@talentflow.local" required autocomplete="email" placeholder="name@company.com">
+              </div>
+            </div>
+
+            <div class="form-field">
+              <div class="field-label-row">
+                <label for="login-password">Password</label>
+                <span class="field-helper" id="role-preview-tag">Role: Recruiter</span>
+              </div>
+              <div class="input-container">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input type="password" id="login-password" value="Recruiter@123456" required autocomplete="current-password" placeholder="••••••••••••">
+                <button type="button" class="eye-toggle-btn" onclick="togglePasswordVisibility('login-password', this)">
+                  <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-login-submit" class="auth-submit-btn">
+              <span id="login-btn-text">Sign in to Platform</span>
+              <span id="login-btn-spinner" class="inline-spinner hidden"></span>
+            </button>
+          </form>
+
+          <div class="auth-card-footer">
+            <span>Applying for an open position?</span>
+            <button type="button" class="link-btn" onclick="switchAuthPortal('careers')">Browse Open Jobs & Apply →</button>
+          </div>
+        </div>
+
+        <!-- CANDIDATE CAREERS PREVIEW IN AUTH PANEL -->
+        <div id="auth-careers-section" class="hidden">
+          <div class="auth-header-text">
+            <h2>Current Job Openings</h2>
+            <p>Select a position and submit your application with instant resume scoring.</p>
+          </div>
+
+          <div id="auth-public-jobs-list" class="auth-jobs-scrollbox">
+            <!-- Dynamically populated -->
+          </div>
+
+          <div class="auth-card-footer">
+            <span>Are you a recruiter or team member?</span>
+            <button type="button" class="link-btn" onclick="switchAuthPortal('staff')">← Back to Staff Sign In</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- 2. MAIN APPLICATION WORKSPACE (POST-AUTHENTICATION)      -->
+  <!-- ======================================================== -->
+  <div id="app-workspace" class="workspace-wrapper hidden">
+    
+    <!-- Top Navigation Bar -->
+    <header class="app-navbar">
+      <div class="nav-left">
+        <div class="app-brand" onclick="switchTab('kanban')">
+          <div class="app-brand-badge">TF</div>
+          <div class="app-brand-text">
+            <span class="app-title">TalentFlow</span>
+            <span class="app-subtitle">ATS Suite</span>
+          </div>
+        </div>
+
+        <!-- Workspace Navigation Tabs -->
+        <nav class="workspace-nav">
+          <button class="nav-btn active" id="tab-kanban" onclick="switchTab('kanban')">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <span>Pipeline Board</span>
+          </button>
+          <button class="nav-btn" id="tab-jobs" onclick="switchTab('jobs')">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+            <span>Manage Jobs</span>
+          </button>
+          <button class="nav-btn" id="tab-careers" onclick="switchTab('careers')">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span>Careers Portal</span>
+          </button>
+          <button class="nav-btn" id="tab-reports" onclick="switchTab('reports')">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            <span>Analytics & Audit</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="nav-right">
+        <!-- Live SignalR Status Pill -->
+        <div class="live-status-pill" id="live-indicator">
+          <span class="live-pulse"></span>
+          <span id="live-status-text">SignalR Live</span>
+        </div>
+
+        <!-- User Profile Dropdown -->
+        <div class="user-profile-menu">
+          <div class="avatar-circle" id="user-avatar-initials">SJ</div>
+          <div class="user-meta">
+            <span class="user-name" id="user-display-name">Sarah Jenkins</span>
+            <span class="user-role-badge role-recruiter" id="user-display-role">Recruiter</span>
+          </div>
+          <button class="btn-logout" onclick="logout()" title="Sign Out of TalentFlow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN DASHBOARD CONTAINER -->
+    <main class="dashboard-body">
+      
+      <!-- ================= SECTION 1: KANBAN BOARD ================= -->
+      <section id="section-kanban" class="workspace-section">
+        <!-- Top Toolbar -->
+        <div class="board-toolbar">
+          <div class="toolbar-left">
+            <div class="job-select-wrapper">
+              <label for="job-selector">Active Pipeline:</label>
+              <select id="job-selector" onchange="onJobSelected()" class="job-dropdown">
+                <option value="">Loading jobs...</option>
+              </select>
+            </div>
+            <div id="job-stats-badge" class="job-stats-pill"></div>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn-action btn-outline" onclick="reloadBoard()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              <span>Refresh</span>
+            </button>
+            <button class="btn-action btn-primary" onclick="openCreateJobModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Post Job</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Kanban Columns Container -->
+        <div class="kanban-scroll-viewport">
+          <div class="kanban-board-grid" id="kanban-columns">
+            <!-- Pipeline columns injected dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SECTION 2: JOB MANAGEMENT ================= -->
+      <section id="section-jobs" class="workspace-section hidden">
+        <div class="section-heading-row">
+          <div>
+            <h2>Job Openings & Requisitions</h2>
+            <p>Create, publish, and track applications across all engineering and operations roles.</p>
+          </div>
+          <button class="btn-action btn-primary" onclick="openCreateJobModal()">+ Create New Requisition</button>
+        </div>
+        <div class="table-card">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Job Requisition</th>
+                <th>Department</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Openings</th>
+                <th>Active Applicants</th>
+                <th>Published</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="jobs-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= SECTION 3: CAREERS PORTAL PREVIEW ================= -->
+      <section id="section-careers" class="workspace-section hidden">
+        <div class="careers-hero-card">
+          <h1>Public Careers Portal Preview</h1>
+          <p>This is the applicant-facing portal where candidates browse active requisitions and apply with instant competency scoring.</p>
+        </div>
+        <div class="career-cards-container" id="public-jobs-list">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- ================= SECTION 4: REPORTS & AUDIT ================= -->
+      <section id="section-reports" class="workspace-section hidden">
+        <div class="section-heading-row">
+          <div>
+            <h2>Recruitment Metrics & Audit Trail</h2>
+            <p>Conversion velocity, time to hire, and full tamper-evident audit history.</p>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <h3>Pipeline Stage Conversion</h3>
+              <span class="metric-tag">Conversion Rate</span>
+            </div>
+            <div id="pipeline-funnel-content" class="metric-content">Select a job to view conversion velocity.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-header">
+              <h3>Average Time to Hire</h3>
+              <span class="metric-tag">Efficiency</span>
+            </div>
+            <div id="time-to-hire-content" class="metric-content">Loading...</div>
+          </div>
+        </div>
+
+        <div class="table-card mt-6">
+          <div class="table-header-title">
+            <h3>System Audit Trail (Last 30 Events)</h3>
+            <span class="text-muted text-xs">Immutable security & card transition logs</span>
+          </div>
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Timestamp (UTC)</th>
+                <th>Actor</th>
+                <th>Entity</th>
+                <th>Action</th>
+                <th>Change Summary</th>
+              </tr>
+            </thead>
+            <tbody id="audit-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- 3. MODALS & CANDIDATE DETAIL DRAWER                      -->
+  <!-- ======================================================== -->
+
+  <!-- Candidate Detail Drawer Modal -->
+  <div class="modal-overlay hidden" id="application-modal">
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <div class="drawer-header-info">
+          <div class="drawer-avatar" id="app-modal-avatar">MT</div>
+          <div>
+            <h3 id="app-modal-candidate-name">Candidate Name</h3>
+            <span class="drawer-job-title" id="app-modal-job-title">Job Title</span>
+          </div>
+        </div>
+        <button class="drawer-close-btn" onclick="closeModal('application-modal')">&times;</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="drawer-split-layout">
+          
+          <!-- Left Column: Primary Candidate Card & Actions -->
+          <div class="drawer-col-left">
+            
+            <!-- Contact & Meta Card -->
+            <div class="card-box">
+              <div class="meta-row">
+                <span class="meta-label">Email:</span>
+                <span class="meta-value" id="app-modal-email"></span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Phone:</span>
+                <span class="meta-value" id="app-modal-phone"></span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Applied Date:</span>
+                <span class="meta-value" id="app-modal-date"></span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Current Stage:</span>
+                <span class="meta-badge" id="app-modal-stage">Applied</span>
+              </div>
+            </div>
+
+            <!-- Resume Match Score Analysis -->
+            <div class="card-box" id="app-modal-score-box">
+              <div class="score-header-row">
+                <span class="card-box-title">AI Competency Match Score</span>
+                <span id="app-modal-match-badge" class="score-badge">95% Match</span>
+              </div>
+              <div class="score-bar-track">
+                <div id="app-modal-match-bar" class="score-bar-fill" style="width: 95%;"></div>
+              </div>
+              <div class="skills-heading">Extracted Skills & Competencies:</div>
+              <div id="app-modal-matched-skills" class="skills-tags-wrap"></div>
+            </div>
+
+            <!-- Resume Download -->
+            <div class="card-box">
+              <span class="card-box-title">Candidate Resume</span>
+              <div class="resume-download-row mt-2">
+                <a id="app-modal-resume-link" class="btn-action btn-outline btn-full" target="_blank">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Download Verified Resume</span>
+                </a>
+              </div>
+              <div class="cover-note-box mt-2" id="app-modal-covernote-container">
+                <span class="text-xs font-bold text-muted">Cover Note:</span>
+                <p id="app-modal-covernote"></p>
+              </div>
+            </div>
+
+            <!-- Stage Transition Controller -->
+            <div class="card-box stage-move-box">
+              <span class="card-box-title">Pipeline Stage Transition</span>
+              <div class="stage-move-controls mt-2">
+                <select id="app-modal-target-stage" class="form-select"></select>
+                <button class="btn-action btn-primary" onclick="submitStageMove()">Move Stage</button>
+              </div>
+              <input type="text" id="app-modal-move-reason" placeholder="Reason (e.g. Cleared technical interview round)" class="form-input mt-2">
+              <label class="checkbox-label mt-2">
+                <input type="checkbox" id="app-modal-allow-skip">
+                <span>Admin override validation rules</span>
+              </label>
+            </div>
+
+            <!-- Offer Approval & Letter Generator -->
+            <div class="card-box" id="app-modal-offer-box">
+              <span class="card-box-title">Offer Letter & Approval</span>
+              <div id="offer-status-content" class="mt-2"></div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Tabs (Notes, Interviews, Audit History) -->
+          <div class="drawer-col-right">
+            <div class="drawer-tab-bar">
+              <button class="drawer-tab-btn active" onclick="switchDetailTab('notes')">Internal Notes</button>
+              <button class="drawer-tab-btn" onclick="switchDetailTab('interviews')">Interviews & Feedback</button>
+              <button class="drawer-tab-btn" onclick="switchDetailTab('history')">Stage Timeline</button>
             </div>
 
             <!-- Notes Tab -->
-            <div id="detail-tab-notes">
-              <div class="add-note-box">
-                <textarea id="note-body-input" rows="2" placeholder="Write internal recruiter feedback or assessment notes..."></textarea>
-                <button class="btn btn-primary btn-sm" onclick="submitNote()">Add Note</button>
+            <div id="detail-tab-notes" class="drawer-tab-pane">
+              <div class="note-input-card">
+                <textarea id="note-body-input" rows="3" class="form-textarea" placeholder="Add confidential recruiter notes, evaluation comments, or candidate updates..."></textarea>
+                <div class="text-right mt-2">
+                  <button class="btn-action btn-primary btn-sm" onclick="submitNote()">Add Note</button>
+                </div>
               </div>
-              <div class="notes-timeline" id="notes-list"></div>
+              <div class="timeline-list" id="notes-list"></div>
             </div>
 
             <!-- Interviews Tab -->
-            <div id="detail-tab-interviews" class="hidden">
-              <button class="btn btn-outline btn-sm mb-2" onclick="openScheduleInterviewModal()">+ Schedule Interview</button>
-              <div id="interviews-list"></div>
+            <div id="detail-tab-interviews" class="drawer-tab-pane hidden">
+              <div class="flex-between mb-3">
+                <span class="card-box-title">Scheduled Rounds</span>
+                <button class="btn-action btn-outline btn-sm" onclick="openScheduleInterviewModal()">+ Schedule Round</button>
+              </div>
+              <div id="interviews-list" class="timeline-list"></div>
             </div>
 
             <!-- History Tab -->
-            <div id="detail-tab-history" class="hidden">
-              <div class="history-timeline" id="history-list"></div>
+            <div id="detail-tab-history" class="drawer-tab-pane hidden">
+              <div class="timeline-list" id="history-list"></div>
             </div>
+
           </div>
         </div>
       </div>
@@ -253,94 +560,99 @@
   </div>
 
   <!-- Candidate Public Apply Modal -->
-  <div class="modal-backdrop hidden" id="apply-modal">
-    <div class="modal-content">
-      <div class="modal-header">
+  <div class="modal-overlay hidden" id="apply-modal">
+    <div class="modal-dialog">
+      <div class="modal-dialog-header">
         <h3 id="apply-modal-title">Apply for Job</h3>
-        <button class="modal-close" onclick="closeModal('apply-modal')">&times;</button>
+        <button class="modal-close-x" onclick="closeModal('apply-modal')">&times;</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-dialog-body">
         <form id="apply-form" onsubmit="submitApplication(event)">
           <input type="hidden" id="apply-job-id">
           <div class="form-group">
             <label>Full Name *</label>
-            <input type="text" id="apply-name" required class="form-control" placeholder="Jane Doe">
+            <input type="text" id="apply-name" required class="form-input" placeholder="e.g. Ramesh Kumar">
           </div>
           <div class="form-group">
             <label>Email Address *</label>
-            <input type="email" id="apply-email" required class="form-control" placeholder="jane@example.com">
+            <input type="email" id="apply-email" required class="form-input" placeholder="ramesh@example.com">
           </div>
           <div class="form-group">
             <label>Phone Number</label>
-            <input type="tel" id="apply-phone" class="form-control" placeholder="+91 9876543210">
+            <input type="tel" id="apply-phone" class="form-input" placeholder="+91 98765 43210">
           </div>
           <div class="form-group">
-            <label>Cover Note / Message</label>
-            <textarea id="apply-covernote" rows="3" class="form-control" placeholder="Tell us why you are a great fit..."></textarea>
+            <label>Cover Note / Why are you a good fit?</label>
+            <textarea id="apply-covernote" rows="3" class="form-textarea" placeholder="Briefly introduce your experience and relevant projects..."></textarea>
           </div>
           <div class="form-group">
             <label>Resume (PDF or DOCX, max 5 MB) *</label>
-            <input type="file" id="apply-resume" required accept=".pdf,.docx" class="form-control">
+            <input type="file" id="apply-resume" required accept=".pdf,.docx" class="form-file-input">
+            <span class="text-xs text-muted mt-1 block">Magic-byte verified; scored immediately by the Resume Match Engine.</span>
           </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-ghost" onclick="closeModal('apply-modal')">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="btn-submit-apply">Submit Application</button>
+          <div class="form-actions-row">
+            <button type="button" class="btn-action btn-outline" onclick="closeModal('apply-modal')">Cancel</button>
+            <button type="submit" class="btn-action btn-primary" id="btn-submit-apply">Submit Application</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- Create Job Modal -->
-  <div class="modal-backdrop hidden" id="job-create-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Create New Job Posting</h3>
-        <button class="modal-close" onclick="closeModal('job-create-modal')">&times;</button>
+  <!-- Create Job Requisition Modal -->
+  <div class="modal-overlay hidden" id="job-create-modal">
+    <div class="modal-dialog">
+      <div class="modal-dialog-header">
+        <h3>Create Job Requisition</h3>
+        <button class="modal-close-x" onclick="closeModal('job-create-modal')">&times;</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-dialog-body">
         <form id="create-job-form" onsubmit="submitCreateJob(event)">
           <div class="form-group">
             <label>Job Title *</label>
-            <input type="text" id="job-title" required class="form-control" placeholder="Senior Backend Engineer">
-          </div>
-          <div class="form-group">
-            <label>Department *</label>
-            <input type="text" id="job-dept" required class="form-control" placeholder="Engineering">
-          </div>
-          <div class="form-group">
-            <label>Location *</label>
-            <input type="text" id="job-location" required class="form-control" placeholder="Hyderabad / Remote">
-          </div>
-          <div class="form-group">
-            <label>Employment Type</label>
-            <select id="job-type" class="form-control">
-              <option value="Full-time">Full-time</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Contract">Contract</option>
-            </select>
+            <input type="text" id="job-title" required class="form-input" placeholder="e.g. Senior Backend Architect">
           </div>
           <div class="form-row">
-            <div class="form-group">
+            <div class="form-group flex-1">
+              <label>Department *</label>
+              <input type="text" id="job-dept" required class="form-input" placeholder="Engineering">
+            </div>
+            <div class="form-group flex-1">
+              <label>Location *</label>
+              <input type="text" id="job-location" required class="form-input" placeholder="Hyderabad, India (Hybrid)">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Employment Type</label>
+              <select id="job-type" class="form-select">
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Contract">Contract</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label>Openings Count</label>
+              <input type="number" id="job-openings" value="1" min="1" class="form-input">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
               <label>Min Salary (INR)</label>
-              <input type="number" id="job-sal-min" class="form-control" placeholder="1800000">
+              <input type="number" id="job-sal-min" class="form-input" placeholder="1800000">
             </div>
-            <div class="form-group">
+            <div class="form-group flex-1">
               <label>Max Salary (INR)</label>
-              <input type="number" id="job-sal-max" class="form-control" placeholder="2800000">
+              <input type="number" id="job-sal-max" class="form-input" placeholder="3200000">
             </div>
           </div>
           <div class="form-group">
-            <label>Openings</label>
-            <input type="number" id="job-openings" value="1" min="1" class="form-control">
+            <label>Job Description & Requirements *</label>
+            <textarea id="job-desc" required rows="4" class="form-textarea" placeholder="Detail the technical responsibilities, skills (e.g. C#, .NET 8, CQRS, SQL Server), and qualifications..."></textarea>
           </div>
-          <div class="form-group">
-            <label>Job Description *</label>
-            <textarea id="job-desc" required rows="4" class="form-control" placeholder="Describe the role responsibilities and requirements..."></textarea>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-ghost" onclick="closeModal('job-create-modal')">Cancel</button>
-            <button type="submit" class="btn btn-primary">Create Job (Draft)</button>
+          <div class="form-actions-row">
+            <button type="button" class="btn-action btn-outline" onclick="closeModal('job-create-modal')">Cancel</button>
+            <button type="submit" class="btn-action btn-primary">Create Requisition (Draft)</button>
           </div>
         </form>
       </div>
@@ -348,44 +660,47 @@
   </div>
 
   <!-- Schedule Interview Modal -->
-  <div class="modal-backdrop hidden" id="schedule-interview-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Schedule Interview</h3>
-        <button class="modal-close" onclick="closeModal('schedule-interview-modal')">&times;</button>
+  <div class="modal-overlay hidden" id="schedule-interview-modal">
+    <div class="modal-dialog">
+      <div class="modal-dialog-header">
+        <h3>Schedule Candidate Interview</h3>
+        <button class="modal-close-x" onclick="closeModal('schedule-interview-modal')">&times;</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-dialog-body">
         <form onsubmit="submitInterviewSchedule(event)">
           <div class="form-group">
-            <label>Date & Time *</label>
-            <input type="datetime-local" id="int-datetime" required class="form-control">
+            <label>Date & Time (UTC/Local) *</label>
+            <input type="datetime-local" id="int-datetime" required class="form-input">
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Duration (Minutes)</label>
+              <input type="number" id="int-duration" value="45" min="15" max="180" class="form-input">
+            </div>
+            <div class="form-group flex-1">
+              <label>Interview Format</label>
+              <select id="int-type" class="form-select">
+                <option value="0">Phone Screen</option>
+                <option value="1" selected>Video Technical</option>
+                <option value="2">Onsite Architectural</option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
-            <label>Duration (Minutes)</label>
-            <input type="number" id="int-duration" value="45" min="15" max="180" class="form-control">
+            <label>Meeting Link or Conference Room</label>
+            <input type="text" id="int-link" class="form-input" placeholder="https://meet.google.com/abc-xyz-123">
           </div>
-          <div class="form-group">
-            <label>Interview Type</label>
-            <select id="int-type" class="form-control">
-              <option value="0">Phone</option>
-              <option value="1" selected>Video</option>
-              <option value="2">Onsite</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Meeting Link or Location</label>
-            <input type="text" id="int-link" class="form-control" placeholder="https://meet.google.com/xyz-abc">
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-ghost" onclick="closeModal('schedule-interview-modal')">Cancel</button>
-            <button type="submit" class="btn btn-primary">Confirm Schedule</button>
+          <div class="form-actions-row">
+            <button type="button" class="btn-action btn-outline" onclick="closeModal('schedule-interview-modal')">Cancel</button>
+            <button type="submit" class="btn-action btn-primary">Confirm Interview Round</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+  <!-- Floating Toast Notification -->
+  <div id="toast" class="toast-popup hidden"></div>
 
   <script src="app.js"></script>
 </body>
