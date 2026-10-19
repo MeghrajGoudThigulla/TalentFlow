@@ -17,21 +17,21 @@ public class ApplicationsController : ApiControllerBase
         _fileStorage = fileStorage;
     }
 
-    [HttpGet("api/jobs/{jobId:guid}/applications")]
+    [HttpGet("/api/jobs/{jobId:guid}/applications")]
     public async Task<ActionResult<List<ApplicationCardDto>>> GetJobApplications(Guid jobId)
     {
         var result = await Mediator.Send(new GetJobApplicationsQuery(jobId));
         return Ok(result);
     }
 
-    [HttpGet("api/applications/{id:guid}")]
+    [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApplicationDetailDto>> GetApplicationById(Guid id)
     {
         var result = await Mediator.Send(new GetApplicationByIdQuery(id));
         return Ok(result);
     }
 
-    [HttpPost("api/applications/{id:guid}/move")]
+    [HttpPost("{id:guid}/move")]
     [Authorize(Policy = "RequireRecruiterOrAdmin")]
     public async Task<ActionResult<ApplicationCardDto>> MoveApplication(Guid id, [FromBody] MoveApplicationRequest request)
     {
@@ -47,7 +47,7 @@ public class ApplicationsController : ApiControllerBase
         return Ok(result);
     }
 
-    [HttpPost("api/applications/bulk-move")]
+    [HttpPost("bulk-move")]
     [Authorize(Policy = "RequireRecruiterOrAdmin")]
     public async Task<ActionResult<object>> BulkMove([FromBody] BulkMoveApplicationsCommand command)
     {
@@ -55,7 +55,7 @@ public class ApplicationsController : ApiControllerBase
         return Ok(new { movedCount = count });
     }
 
-    [HttpPost("api/applications/{id:guid}/notes")]
+    [HttpPost("{id:guid}/notes")]
     [Authorize(Policy = "RequireHiringManagerOrAbove")]
     public async Task<ActionResult<NoteDto>> AddNote(Guid id, [FromBody] AddNoteRequest request)
     {
@@ -63,7 +63,7 @@ public class ApplicationsController : ApiControllerBase
         return Ok(result);
     }
 
-    [HttpGet("api/applications/{id:guid}/resume")]
+    [HttpGet("{id:guid}/resume")]
     public async Task<IActionResult> DownloadResume(Guid id)
     {
         var app = await Mediator.Send(new GetApplicationByIdQuery(id));
@@ -82,7 +82,7 @@ public class ApplicationsController : ApiControllerBase
         return File(stream, contentType, app.ResumeOriginalFileName ?? fileName);
     }
 
-    [HttpPost("api/applications/{id:guid}/offer/approve")]
+    [HttpPost("{id:guid}/offer/approve")]
     [Authorize(Policy = "RequireHiringManagerOrAbove")]
     public async Task<ActionResult<OfferApprovalDto>> ApproveOffer(Guid id, [FromBody] ApproveOfferRequest request)
     {
@@ -90,7 +90,7 @@ public class ApplicationsController : ApiControllerBase
         return Ok(result);
     }
 
-    [HttpGet("api/applications/{id:guid}/offer-letter")]
+    [HttpGet("{id:guid}/offer-letter")]
     public async Task<IActionResult> GetOfferLetter(Guid id, [FromQuery] bool rawHtml = false)
     {
         var offerLetter = await Mediator.Send(new GetOfferLetterQuery(id));

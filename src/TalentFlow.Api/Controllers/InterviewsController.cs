@@ -9,7 +9,7 @@ namespace TalentFlow.Api.Controllers;
 [Authorize]
 public class InterviewsController : ApiControllerBase
 {
-    [HttpPost("api/applications/{applicationId:guid}/interviews")]
+    [HttpPost("/api/applications/{applicationId:guid}/interviews")]
     [Authorize(Policy = "RequireRecruiterOrAdmin")]
     public async Task<ActionResult<InterviewDto>> ScheduleInterview(Guid applicationId, [FromBody] ScheduleInterviewRequest request)
     {
@@ -26,7 +26,7 @@ public class InterviewsController : ApiControllerBase
         return Ok(result);
     }
 
-    [HttpPost("api/interviews/{id:guid}/feedback")]
+    [HttpPost("{id:guid}/feedback")]
     [Authorize(Policy = "RequireHiringManagerOrAbove")]
     public async Task<ActionResult<InterviewFeedbackDto>> SubmitFeedback(Guid id, [FromBody] SubmitFeedbackRequest request)
     {
